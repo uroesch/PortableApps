@@ -1,0 +1,32 @@
+[submodule "ShareXPortable"]
+	path = ShareXPortable
+	url = http://github.com/uroesch/ShareXPortable.git
+	branch = master
+[submodule "LdapAdminPortable"]
+	path = LdapAdminPortable
+	url = http://github.com/uroesch/LdapAdminPortable.git
+	branch = master
+[submodule "DBeaverPortable"]
+	path = DBeaverPortable
+	url = http://github.com/uroesch/DBeaverPortable.git
+	branch = master
+[submodule "ApacheDirectoryStudioPortable"]
+	path = ApacheDirectoryStudioPortable
+	url = http://github.com/uroesch/ApacheDirectoryStudioPortable.git
+	branch = master
+[submodule "ApacheJMeterPortable"]
+	path = ApacheJMeterPortable
+	url = http://github.com/uroesch/ApacheJMeterPortable.git
+	branch = master
+[submodule "MattermostPortable"]
+	path = MattermostPortable
+	url = http://github.com/uroesch/MattermostPortable.git
+	branch = master
+[submodule "JoplinPortable"]
+	path = JoplinPortable
+	url = http://github.com/uroesch/JoplinPortable.git
+	branch = master
+[submodule "WinMergeJPPortable"]
+	path = WinMergeJPPortable
+	url = http://github.com/uroesch/WinMergeJPPortable.git
+	branch = master
