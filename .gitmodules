@@ -30,3 +30,11 @@
 	path = WinMergeJPPortable
 	url = http://github.com/uroesch/WinMergeJPPortable.git
 	branch = master
+[submodule "KeyStoreExplorerPortable"]
+	path = KeyStoreExplorerPortable
+	url = https://github.com/uroesch/KeyStoreExplorerPortable.git
+	branch = master
+[submodule "GitPortable"]
+	path = GitPortable
+	url = https://github.com/uroesch/GitPortable.git
+	branch = master
