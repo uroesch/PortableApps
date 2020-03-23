@@ -38,3 +38,11 @@
 	path = GitPortable
 	url = https://github.com/uroesch/GitPortable.git
 	branch = master
+[submodule "PortableApps.comLauncher"]
+	path = PortableApps.comLauncher
+	url = https://github.com/uroesch/PortableApps.comLauncher.git
+	branch = patched
+[submodule "PortableApps.comInstaller"]
+	path = PortableApps.comInstaller
+	url = https://github.com/uroesch/PortableApps.comInstaller.git
+	branch = master
