@@ -46,3 +46,6 @@
 	path = PortableApps.comInstaller
 	url = https://github.com/uroesch/PortableApps.comInstaller.git
 	branch = master
+[submodule "PlantUMLPortable"]
+	path = PlantUMLPortable
+	url = https://github.com/uroesch/PlantUMLPortable.git
