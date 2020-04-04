@@ -19,7 +19,10 @@ declare -r DIVIDER=$(printf "%0.1s" -{1..80})
 # Functions
 # -----------------------------------------------------------------------------
 function file_list() {
-  find ${BASE_DIR} -type f -name ${UPDATE_SCRIPT} \! -path "${SCRIPT_DIR}/*"
+  find ${BASE_DIR} \
+    -type f \
+    -name ${UPDATE_SCRIPT} \
+    -path "${BASE_DIR}/*Portable/*"
 }
 
 # -----------------------------------------------------------------------------
