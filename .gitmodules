@@ -49,3 +49,6 @@
 [submodule "PlantUMLPortable"]
 	path = PlantUMLPortable
 	url = https://github.com/uroesch/PlantUMLPortable.git
+[submodule "PlinkProxyPortable"]
+	path = PlinkProxyPortable
+	url = https://github.com/uroesch/PlinkProxyPortable
