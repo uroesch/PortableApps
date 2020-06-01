@@ -67,10 +67,32 @@ function sync_master() {
 
 function create_new_branch() {
   local old_release=$(last_release)
+  local checkout_option=""
   NEW_RELEASE=${old_release/${OLD_VERSION}/${NEW_VERSION}}
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
-    git checkout -b release/${NEW_RELEASE} 
-  fi
+    checkout_option="-b"
+  fi 
+  git checkout ${checkout_option} release/${NEW_RELEASE} 
+}
+
+function create_release_tag() {
+  # clean tag if already exits
+  if git tag | grep ${NEW_RELEASE}; then 
+    git tag --delete ${NEW_RELEASE} 
+  fi 
+  git tag ${NEW_RELEASE}
+}
+
+function commit_release() {
+  git diff --exit-code || \
+    git commit \
+      --all \
+      --message "$(printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION})"
+}
+
+function push_release() {
+  git push origin release/${NEW_RELEASE}
+  git push origin ${NEW_RELEASE}
 }
 
 function create_new_release() {
@@ -79,10 +101,14 @@ function create_new_release() {
     -e "s/${OLD_VERSION%%-*}/${NEW_VERSION%%-*}/g" \
     ${UPDATE_INI}
   powershell Other/Update/Update.ps1
-  git commit \
-    --all \
+  commit_release 
+  create_release_tag
+  push_release 
+}
+
+function create_pull_request() {
+  git hub pull-request \
     --message "$(printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION})"
-  git tag ${NEW_RELEASE}
 }
 
 # -----------------------------------------------------------------------------
