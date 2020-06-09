@@ -11,9 +11,13 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
+declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -g OLD_VERSION=
 declare -g NEW_VERSION=
-declare -g NEW_RELEASE=
+declare -g OLD_PACKAGE=
+declare -g NEW_PACKAGE=
+declare -g OLD_DISPLAY=
+declare -g NEW_DISPLAY=
 declare -r UPDATE_INI=App/AppInfo/update.ini
 declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 
@@ -57,7 +61,14 @@ function verify_options() {
 }
 
 function last_release() {
-  git tag | tail -n 1 
+  OLD_RELEASE=$(git describe --abbrev=0 --tags)
+  OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
+  OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
+}
+
+function new_release() { 
+  NEW_PACKAGE=${NEW_VERSION//[^0-9.-]/}
+  NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${NEW_PACKAGE//[-.]/ })
 }
 
 function sync_master() {
@@ -66,9 +77,8 @@ function sync_master() {
 }
 
 function create_new_branch() {
-  local old_release=$(last_release)
   local checkout_option=""
-  NEW_RELEASE=${old_release/${OLD_VERSION}/${NEW_VERSION}}
+  NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
     checkout_option="-b"
   fi 
@@ -96,7 +106,9 @@ function push_release() {
 }
 
 function create_new_release() {
+  new_release
   sed -i \
+    -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
     -e "s/${OLD_VERSION}/${NEW_VERSION}/g" \
     -e "s/${OLD_VERSION%%-*}/${NEW_VERSION%%-*}/g" \
     ${UPDATE_INI}
@@ -111,12 +123,59 @@ function create_pull_request() {
     --message "$(printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION})"
 }
 
+function wait_for_ci_status() {
+  for count in {1..20}; do
+    while true; do
+      git hub ci-status | grep -q success && return 0
+      sleep 60
+    done
+  done
+  echo timeout of 20 minutes reached!
+  return 1
+}
+
+function find_installer() {
+  find ../ -type f -name "${PACKAGE_NAME}_${NEW_RELEASE:1:1000}*.paf.exe" 
+}
+
+function create_checksums() {
+  local files="${@}"
+  sha256sum ${files}  | \
+    awk '{ print gensub("../", "", 1, $2), $1 }'
+}
+
+
+function assemble_release_message() { 
+  local cell_width=64
+  local line=$(eval printf "%0.1s" -{1..${cell_width}})
+  local table_format="| %-${cell_width}s | %-${cell_width}s |\n"
+  printf "%s\n\nUpstream release %s" ${NEW_RELEASE} ${NEW_VERSION};
+  printf "\n\n${table_format}" Filename SHA-256
+  printf "${table_format}" ${line} ${line}
+  printf "${table_format}" $(create_checksums $(find_installer))
+}
+
+function create_release() {
+  local options=""
+  case ${NEW_RELEASE} in
+  *beta*|*alpha*|*rc*) options="${options} -p";;
+  esac
+  assemble_release_message
+  git hub release create ${options} \
+    -a $(find_installer) \
+    -F <( assemble_release_message ) \
+    ${NEW_RELEASE}
+}
+
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
 parse_options "${@}"
 verify_options
 sync_master
+last_release
 create_new_branch
 create_new_release
-create_pull_request
+#create_pull_request
+#wait_for_ci_status
+create_release

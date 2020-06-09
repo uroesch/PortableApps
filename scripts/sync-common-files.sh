@@ -70,7 +70,7 @@ function print_header() {
 function sync_repos() {
   local -a modules=( ${@} )
   cd ${BASE_DIR}
-  if [[ -z ${modules} ]]; then
+  if [[ -z ${modules:-} ]]; then
     modules=$(ls -d *Portable)
   fi
   for repo_name in ${modules[@]}; do
