@@ -60,15 +60,13 @@ function verify_options() {
   done
 }
 
-function last_release() {
+function define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
-}
-
-function new_release() { 
   NEW_PACKAGE=${NEW_VERSION//[^0-9.-]/}
   NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${NEW_PACKAGE//[-.]/ })
+  NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
 }
 
 function sync_master() {
@@ -78,7 +76,6 @@ function sync_master() {
 
 function create_new_branch() {
   local checkout_option=""
-  NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
     checkout_option="-b"
   fi 
@@ -106,11 +103,11 @@ function push_release() {
 }
 
 function create_new_release() {
-  new_release
   sed -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
     -e "s/${OLD_VERSION}/${NEW_VERSION}/g" \
     -e "s/${OLD_VERSION%%-*}/${NEW_VERSION%%-*}/g" \
+    -e "s/${OLD_VERSION//+/}/${NEW_VERSION//+}/g" \
     ${UPDATE_INI}
   powershell Other/Update/Update.ps1
   commit_release 
@@ -135,7 +132,10 @@ function wait_for_ci_status() {
 }
 
 function find_installer() {
-  find ../ -type f -name "${PACKAGE_NAME}_${NEW_RELEASE:1:1000}*.paf.exe" 
+  local release=${NEW_RELEASE:1:1000}
+  find ../ \
+    -type f \
+    -name "${PACKAGE_NAME}_${release//[+]/*}*.paf.exe"
 }
 
 function create_checksums() {
@@ -173,9 +173,9 @@ function create_release() {
 parse_options "${@}"
 verify_options
 sync_master
-last_release
+define_release_variables
 create_new_branch
 create_new_release
-#create_pull_request
-#wait_for_ci_status
+create_pull_request
+wait_for_ci_status
 create_release
