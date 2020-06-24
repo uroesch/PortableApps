@@ -103,11 +103,12 @@ function push_release() {
 }
 
 function create_new_release() {
+  local old_version=${OLD_VERSION//\./\\.}
   sed -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
-    -e "s/${OLD_VERSION}/${NEW_VERSION}/g" \
-    -e "s/${OLD_VERSION%%-*}/${NEW_VERSION%%-*}/g" \
-    -e "s/${OLD_VERSION//+/}/${NEW_VERSION//+}/g" \
+    -e "s/${old_version}/${NEW_VERSION}/g" \
+    -e "s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
+    -e "s/${old_version//+/}/${NEW_VERSION//+}/g" \
     ${UPDATE_INI}
   powershell Other/Update/Update.ps1
   commit_release 
