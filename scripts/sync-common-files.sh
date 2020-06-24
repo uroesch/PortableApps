@@ -86,7 +86,7 @@ function usage() {
   cat <<USAGE
 
   Usage:
-    ${SCRIPT} [-X] [-h]
+    ${SCRIPT} [-X] [-h] [directory [..]]
 
   Options:
     -h | --help       This message
