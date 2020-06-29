@@ -11,7 +11,9 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
+declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r PACKAGE_NAME=$(basename $(pwd))
+declare -g MESSAGE=
 declare -g OLD_VERSION=
 declare -g NEW_VERSION=
 declare -g OLD_PACKAGE=
@@ -31,9 +33,11 @@ function usage() {
   Usage: ${SCRIPT} <options>
   
   Options:
-    -h | --help          This message  
-    -o | --old <version> Old version string (mandatory)
-    -n | --new <version> New version string (mandatory)
+    -h | --help             This message  
+    -o | --old <version>    Old version string (mandatory)
+    -n | --new <version>    New version string (mandatory)
+    -m | --message <messag> New version string (mandatory)
+
 
 USAGE
   exit ${exit_code}
@@ -42,10 +46,11 @@ USAGE
 function parse_options() { 
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -o|--old)  shift; OLD_VERSION=${1};;
-    -n|--new)  shift; NEW_VERSION=${1};;
-    -h|--help) usage 0;;
-    *)         usage 1;; 
+    -o|--old)     shift; OLD_VERSION=${1};;
+    -n|--new)     shift; NEW_VERSION=${1};;
+    -m|--message) shift; MESSAGE=${1};;
+    -h|--help)    usage 0;;
+    *)            usage 1;; 
     esac
     shift
   done
@@ -90,11 +95,19 @@ function create_release_tag() {
   git tag ${NEW_RELEASE}
 }
 
+function message() {
+  if [[ -n $MESSAGE ]]; then
+    echo "${MESSAGE}"
+  else 
+    printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION}
+  fi
+}
+
 function commit_release() {
   git diff --exit-code || \
     git commit \
       --all \
-      --message "$(printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION})"
+      --message "$(message)"
 }
 
 function push_release() {
@@ -117,8 +130,7 @@ function create_new_release() {
 }
 
 function create_pull_request() {
-  git hub pull-request \
-    --message "$(printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION})"
+  git hub pull-request --message "$(message)"
 }
 
 function wait_for_ci_status() {
@@ -132,40 +144,10 @@ function wait_for_ci_status() {
   return 1
 }
 
-function find_installer() {
-  local release=${NEW_RELEASE:1:1000}
-  find ../ \
-    -type f \
-    -name "${PACKAGE_NAME}_${release//[+]/*}*.paf.exe"
-}
-
-function create_checksums() {
-  local files="${@}"
-  sha256sum ${files}  | \
-    awk '{ print gensub("../", "", 1, $2), $1 }'
-}
-
-
-function assemble_release_message() { 
-  local cell_width=64
-  local line=$(eval printf "%0.1s" -{1..${cell_width}})
-  local table_format="| %-${cell_width}s | %-${cell_width}s |\n"
-  printf "%s\n\nUpstream release %s" ${NEW_RELEASE} ${NEW_VERSION};
-  printf "\n\n${table_format}" Filename SHA-256
-  printf "${table_format}" ${line} ${line}
-  printf "${table_format}" $(create_checksums $(find_installer))
-}
-
 function create_release() {
-  local options=""
-  case ${NEW_RELEASE} in
-  *beta*|*alpha*|*rc*) options="${options} -p";;
-  esac
-  assemble_release_message
-  git hub release create ${options} \
-    -a $(find_installer) \
-    -F <( assemble_release_message ) \
-    ${NEW_RELEASE}
+  ${SCRIPT_DIR}/pa-github-release.sh \
+    --tag ${NEW_RELEASE} \
+    --message "$(message)"
 }
 
 # -----------------------------------------------------------------------------
