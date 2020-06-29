@@ -11,7 +11,7 @@ Using module ".\PortableAppsCommon.psm1"
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-$Version    = "0.0.1-alpha"
+$Version    = "0.0.2-alpha"
 $Debug      = $True
 $SiteUrl    = "https://github.com"
 $ReleaseUrl = "$SiteUrl/uroesch/$AppName/releases/"
@@ -19,26 +19,38 @@ $ReleaseUrl = "$SiteUrl/uroesch/$AppName/releases/"
 # -----------------------------------------------------------------------------
 # Functions
 # -----------------------------------------------------------------------------
-Function Fetch-InstallerLink() { 
-  Debug info "Fetching installer download URL"
-  $HtmlContent   = Invoke-WebRequest -Uri $ReleaseUrl
-  $InstallerLink = $(
-    $HtmlContent.Links |
-    Where { $_.href -like "*/download/*exe" } |
-    Select href -First 1
-  ).href
-  $InstallerLink = $SiteUrl + $InstallerLink
-  Debug info "Got installer URL '$InstallerLink'"
-  Return $InstallerLink
+Function Fetch-InstallerLink() {
+  Debug info "Fetching installer download URL '$ReleaseUrl'"
+  Try {
+    # Does not work on powershell 5 without basic parsing!
+    $HtmlContent   = Invoke-WebRequest -Uri $ReleaseUrl -UseBasicParsing
+    $InstallerLink = $(
+      $HtmlContent.Links |
+      Where { $_.href -like "*/download/*exe" } |
+      Select href -First 1
+    ).href
+    $InstallerLink = $SiteUrl + $InstallerLink
+    Debug info "Got installer URL '$InstallerLink'"
+    Return $InstallerLink
+  }
+  Catch {
+    Debug error "Failed to download and parse release information for $AppName"
+    Exit 123
+  }
 }
 
 # -----------------------------------------------------------------------------
 Function Download-Release {
-  $InstallerLink = Fetch-InstallerLink   
-  $InstallerFile = "$AppRoot/../" + ($InstallerLink.split("/"))[-1]
+  $DownloadDir   = "$AppRoot\Download"
+  $InstallerLink = Fetch-InstallerLink
+  $InstallerFile = "$DownloadDir\" + ($InstallerLink.split("/"))[-1]
 
-  If (Test-Path $InstallerFile) { 
-    Debug info "File '$InstallerFile' is already present; Skip download"  
+  If (!(Test-Path $DownloadDir)) {
+    New-Item -Path $DownloadDir -ItemType directory
+  }
+
+  If (Test-Path $InstallerFile) {
+    Debug info "File '$InstallerFile' is already present; Skip download"
     Return $InstallerFile
   }
 
@@ -48,7 +60,7 @@ Function Download-Release {
       -Uri $InstallerLink `
       -OutFile $InstallerFile | Out-Null
   }
-  Catch { 
+  Catch {
     Debug error "Failed to download '$InstallerLink'"
     Exit 123
   }
@@ -67,17 +79,23 @@ Function Invoke-Installer() {
   param(
     [string] $Command
   )
-  Set-Location "$AppRoot\.."
-  $PARoot = (Get-Location)
+  #  Addtional Switches for paf.exe
+  #  /HIDEINSTALLER=true
+  #  /SILENT=true
 
   Switch (Test-Unix) {
     $True   {
-      $Arguments = "$Command $(ConvertTo-WindowsPath $PARoot)"
+      Set-Location "$AppRoot\.."
+      $PARoot    = (Get-Location)
+      $Arguments = "/SILENT=true /AUTOCLOSE=true /DESTINATION=""$(ConvertTo-WindowsPath $PARoot)\\"""
+      $Arguments = "$Command $Arguments"
       $Command   = "wine"
       break
     }
     default {
-      $Arguments = ConvertTo-WindowsPath $PARoot
+      Set-Location "$AppRoot"
+      $AppRoot    = (Get-Location)
+      $Arguments = "/AUTOCLOSE=true /DESTINATION=""$(ConvertTo-WindowsPath $AppRoot)"""
     }
   }
 
