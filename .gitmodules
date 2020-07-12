@@ -52,3 +52,6 @@
 [submodule "PlinkProxyPortable"]
 	path = PlinkProxyPortable
 	url = https://github.com/uroesch/PlinkProxyPortable
+[submodule "DrawIOPortable"]
+	path = DrawIOPortable
+	url = https://github.com/uroesch/DrawIOPortable.git
