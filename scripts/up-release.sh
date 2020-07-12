@@ -11,9 +11,10 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0})/..)
+declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -g MESSAGE=
+declare -g ITERATION=
 declare -g OLD_VERSION=
 declare -g NEW_VERSION=
 declare -g OLD_PACKAGE=
@@ -34,6 +35,7 @@ function usage() {
   
   Options:
     -h | --help             This message  
+    -i | --iteration <N>    Override the iteration
     -o | --old <version>    Old version string (mandatory)
     -n | --new <version>    New version string (mandatory)
     -m | --message <messag> New version string (mandatory)
@@ -46,11 +48,12 @@ USAGE
 function parse_options() { 
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -o|--old)     shift; OLD_VERSION=${1};;
-    -n|--new)     shift; NEW_VERSION=${1};;
-    -m|--message) shift; MESSAGE=${1};;
-    -h|--help)    usage 0;;
-    *)            usage 1;; 
+    -i|--iteration) shift; ITERATION=${1};;
+    -o|--old)       shift; OLD_VERSION=${1};;
+    -n|--new)       shift; NEW_VERSION=${1};;
+    -m|--message)   shift; MESSAGE=${1};;
+    -h|--help)      usage 0;;
+    *)              usage 1;; 
     esac
     shift
   done
@@ -65,13 +68,23 @@ function verify_options() {
   done
 }
 
+function format_package_version() {
+  local    package_version=${NEW_VERSION//[^0-9.-]/}
+  local -a package_tokens=( ${package_version//[-.]/ } )
+  [[ -n ${ITERATION} ]] && package_tokens[3]=${ITERATION}
+  NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${package_tokens[@]})
+}
+
 function define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
-  NEW_PACKAGE=${NEW_VERSION//[^0-9.-]/}
-  NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${NEW_PACKAGE//[-.]/ })
   NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
+  if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION} ]]; then
+    echo "'${OLD_RELASE}' from git tags does not match with provided '${OLD_VERSION}'" 
+    exit 255
+  fi
+  format_package_version
 }
 
 function sync_master() {
