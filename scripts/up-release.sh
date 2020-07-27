@@ -80,8 +80,8 @@ function define_release_variables() {
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
   NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
-  if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION} ]]; then
-    echo "'${OLD_RELASE}' from git tags does not match with provided '${OLD_VERSION}'" 
+  if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
+    echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'" 
     exit 255
   fi
   format_package_version
