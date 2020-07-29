@@ -148,10 +148,8 @@ function create_pull_request() {
 
 function wait_for_ci_status() {
   for count in {1..20}; do
-    while true; do
-      git hub ci-status | grep -q success && return 0
-      sleep 60
-    done
+    git hub ci-status | grep -q success && return 0
+    sleep 60
   done
   echo timeout of 20 minutes reached!
   return 1
