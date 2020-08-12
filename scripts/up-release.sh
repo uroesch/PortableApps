@@ -128,6 +128,10 @@ function push_release() {
   git push origin ${NEW_RELEASE}
 }
 
+function build_release() {
+  powershell -ExecutionPolicy ByPass -File Other/Update/Update.ps1
+}
+
 function create_new_release() {
   local old_version=${OLD_VERSION//\./\\.}
   sed -i \
@@ -136,7 +140,7 @@ function create_new_release() {
     -e "s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
     -e "s/${old_version//+/}/${NEW_VERSION//+}/g" \
     ${UPDATE_INI}
-  powershell Other/Update/Update.ps1
+  build_release
   commit_release 
   create_release_tag
   push_release 
