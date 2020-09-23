@@ -41,7 +41,7 @@ Function Download-Binary() {
   $JumpUrl     = Extract-Link -Name $Name -Uri $Url
   $DownloadUrl = Extract-Link -name $Name -Uri $JumpUrl
   $OutFile     = ($DownloadUrl.Split('/').Split('='))[-1]
-  $OUtFile     = "$PARoot\$OutFile"
+  $OUtFile     = Join-Path $PARoot $OutFile"
   If (Test-Path $OutFile) { 
     Write-Host "File '${OutFile}' already exists not downloading"
     Return
