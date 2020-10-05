@@ -136,12 +136,10 @@ function create_new_release() {
   local old_version=${OLD_VERSION//\./\\.}
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
-    -e '/^Checksum/!'" { \
-          s/${old_version}/${NEW_VERSION}/g; \
-          s/${old_version%%-*}/${NEW_VERSION%%-*}/g; \
-          s/${old_version//+/}/${NEW_VERSION//+}/g; \
-          s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g; \
-       }" \
+    -e "s/${old_version}/${NEW_VERSION}/g" \
+    -e "s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
+    -e "s/${old_version//+/}/${NEW_VERSION//+}/g" \
+    -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     ${UPDATE_INI}
   build_release
   commit_release 
