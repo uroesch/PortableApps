@@ -102,7 +102,7 @@ function create_release() {
 }
 
 function cleanup() {
-  rm ${SUMS_FILE}
+  [[ -f ${SUMS_FILES} ]] && rm ${SUMS_FILE}
 }
 
 # -----------------------------------------------------------------------------
