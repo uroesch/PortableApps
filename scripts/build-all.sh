@@ -22,7 +22,8 @@ function file_list() {
   find ${BASE_DIR} \
     -type f \
     -name ${UPDATE_SCRIPT} \
-    -path "${BASE_DIR}/*Portable/*"
+    -path "${BASE_DIR}/*Portable/*" | \
+    sort
 }
 
 # -----------------------------------------------------------------------------
@@ -35,7 +36,7 @@ function build_package() {
   echo ${DIVIDER}
   echo ${name} 
   echo ${DIVIDER}
-  powershell ${script}
+  pwsh -ExecutionPolicy ByPass ${script}
   echo 
 }
 
