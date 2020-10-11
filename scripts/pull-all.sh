@@ -13,14 +13,14 @@ function pull_all() {
   cd ${repo_name}
   print_header "${repo_name}"
   git checkout master
-  git pull origin master
+  git pull --rebase origin master
   for repo in $(git branch | grep -v master); do
     git branch -d ${repo} && git push origin :${repo} || :
   done
 }
 
 function print_header() {
-   local ${repo_name}=${1}
+   local repo_name=${1}
    echo
    echo ${LINE}
    echo ${repo_name}
