@@ -1,0 +1,46 @@
+# -----------------------------------------------------------------------------
+# Sync submodules daily 
+# Author: Urs Roesch https://github.com/uroesch
+# Version: 0.1.0
+# -----------------------------------------------------------------------------
+name: daily-submodules-sync
+
+on:
+  push:
+    branches:
+    - workflow/*
+  schedule:
+    - cron: '10 3 * * *' # Sync submodules daily
+  workflow_dispatch:
+
+jobs:
+  daily-submodules-sync:
+    timeout-minutes: 90
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+        - ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        ref: master
+        submodules: recursive
+
+    - name: Run update script
+      shell: bash
+      run: bash scripts/pull-all.sh
+ 
+    - name: Run git status
+      shell: bash
+      run: |2+
+        set -x
+        git status --short | grep --quiet --word M || exit 0
+        git config user.name "Urs Roesch"
+        git config user.email "github@bun.ch"
+        git commit --all --message "Submodule sync - $(date +%F)"
+        git push origin master
+        
