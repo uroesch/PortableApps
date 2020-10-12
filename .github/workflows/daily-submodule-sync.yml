@@ -30,17 +30,18 @@ jobs:
         ref: master
         submodules: recursive
 
-    - name: Run update script
-      shell: bash
-      run: bash scripts/pull-all.sh
- 
-    - name: Run git status
+    - name: Setup git
       shell: bash
       run: |2+
         set -x
-        git status --short | grep --quiet --word M || exit 0
         git config user.name "Urs Roesch"
         git config user.email "github@bun.ch"
-        git commit --all --message "Submodule sync - $(date +%F)"
-        git push origin master
         
+    - name: Update apps and commit
+      shell: bash
+      run: |2+
+        set -x
+        pwsh -ExecutionPolicy ByPass -File scripts/pull-all.ps1 -SkipInfra
+        git status --short | grep --quiet --word M || exit 0
+        git commit all --message "Application submodule sync - $(date +%F)"
+        git push origin master
