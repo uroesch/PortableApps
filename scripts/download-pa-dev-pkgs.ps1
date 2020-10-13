@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-$PARoot    = Convert-Path "$PSScriptRoot\.."
+$PARoot    = Resolve-Path -Path "$PSScriptRoot/.."
 $Domain    = 'https://portableapps.com'
 $UrlBase   = "{0}/apps/development/portableapps.com_{1}"
 
@@ -41,7 +41,7 @@ Function Download-Binary() {
   $JumpUrl     = Extract-Link -Name $Name -Uri $Url
   $DownloadUrl = Extract-Link -name $Name -Uri $JumpUrl
   $OutFile     = ($DownloadUrl.Split('/').Split('='))[-1]
-  $OUtFile     = Join-Path $PARoot $OutFile"
+  $OUtFile     = Join-Path $PARoot $OutFile
   If (Test-Path $OutFile) { 
     Write-Host "File '${OutFile}' already exists not downloading"
     Return
