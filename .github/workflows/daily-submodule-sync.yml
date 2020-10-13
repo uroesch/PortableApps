@@ -42,6 +42,6 @@ jobs:
       run: |2+
         set -x
         pwsh -ExecutionPolicy ByPass -File scripts/pull-all.ps1 -SkipInfra
-        git status --short | grep --quiet --word M || exit 0
-        git commit all --message "Application submodule sync - $(date +%F)"
+        git status --short | grep --quiet --word-regexp M || exit 0
+        git commit --all --message "Application submodule sync - $(date +%F)"
         git push origin master
