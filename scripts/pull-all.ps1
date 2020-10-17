@@ -9,7 +9,6 @@
   by pattern. There are two Modes App and Infra. App updates
   the Application portion while Infra does take care of the
   submodules requires for the build. 
-  
 
 .PARAMETER SkipApps
   Skip update of the App submodules.
