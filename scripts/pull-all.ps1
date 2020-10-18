@@ -17,11 +17,15 @@
 .PARAMETER SkipInfra
   Skip the Infra submodules 
   Infra submodules starting with 'PortableApps.com'.
+
+.PARAMETER Debug
+  Switch on Debugging 
 #>
 
 Param(
   [Switch] $SkipApps,
-  [Switch] $SkipInfra
+  [Switch] $SkipInfra,
+  [Switch] $Debug
 )
 
 # -----------------------------------------------------------------------------
@@ -35,25 +39,53 @@ $GitRefs = @{
 # -----------------------------------------------------------------------------
 # Function
 # -----------------------------------------------------------------------------
+Function Logger() {
+  param(
+    [string] $Severity,
+    [string] $Message
+  )
+  $Color = 'White'
+  $Severity = $Severity.ToUpper()
+  Switch ($Severity) {
+    'INFO'  { $Color = 'Green';      break }
+    'WARN'  { $Color = 'Yellow';     break }
+    'ERROR' { $Color = 'DarkYellow'; break }
+    'FATAL' { $Color = 'Red';        break }
+    default { $Color = 'White';      break }
+  }
+  If (!($Debug)) { Return }
+  Write-Host "$(Get-Date -Format u) - " -NoNewline
+  Write-Host $Severity": " -NoNewline -ForegroundColor $Color
+  Write-Host $Message
+}
 
+# -----------------------------------------------------------------------------
+Function Run() {
+  Param(
+    [String] $Command 
+  )
+  Logger info "Running command -> '$Command'"
+  Invoke-Expression $Command 
+}
+
+# -----------------------------------------------------------------------------
 Function Pull-Repository() {
   Param(
     [String] $Ref = 'master'
   )
   # There may be an easier wasy with submodule
   # but I have not yet found it.
-  Invoke-Expression "git checkout $Ref"
-  Invoke-Expression "git pull --rebase origin $Ref"
-  Invoke-Expression 'git branch' | ForEach-Object {
+  Run "git checkout $Ref"
+  Run "git pull --rebase origin $Ref"
+  Run 'git branch' | ForEach-Object {
     If ($_ -notmatch "$Ref|master") {
-      Invoke-Expression "git branch -d $_"
-      Invoke-Expression "git push origin :$_"
+      Run "git branch -d $_"
+      Run "git push origin :$_"
     }
   }
 }
 
 # -----------------------------------------------------------------------------
-
 Function Sync-Repository() {
   Param( 
     [String] $Submodule,
@@ -74,7 +106,6 @@ Function Sync-Repository() {
 }
 
 # -----------------------------------------------------------------------------
-
 Function Print-Header() {
    Param( 
      [String] $Name
@@ -86,7 +117,6 @@ Function Print-Header() {
 }
 
 # -----------------------------------------------------------------------------
-
 Function Update-Submodule() {
   Param(
     [String] $Pattern
@@ -94,7 +124,10 @@ Function Update-Submodule() {
   Try {
     Get-ChildItem $BaseDir -Directory | ForEach-Object -Process {
       If ($_.Name -match $Pattern) {
-        $Ref = $GitRefs[$_.Name] || 'master'
+        $Ref = Switch ($GitRefs[$_.Name]) {
+          ''      { 'master' }
+          Default { $_ }
+        }
         Sync-Repository -Submodule $_.Name -Ref $Ref
       } 
     }
@@ -105,14 +138,12 @@ Function Update-Submodule() {
 }
 
 # -----------------------------------------------------------------------------
-
 Function Update-Applications() {
   If ($SkipApps) { Return }
   Update-Submodule -Pattern '.*Portable$'
 }
 
 # -----------------------------------------------------------------------------
-
 Function Update-Infrastructure() {
   If ($SkipInfra) { Return }
   Update-Submodule -Pattern '^PortableApps.com.*'
