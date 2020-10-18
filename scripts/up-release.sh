@@ -129,7 +129,7 @@ function push_release() {
 }
 
 function build_release() {
-  powershell -ExecutionPolicy ByPass -File Other/Update/Update.ps1 -UpdateChecksums
+  pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1 -UpdateChecksums
 }
 
 function create_new_release() {
