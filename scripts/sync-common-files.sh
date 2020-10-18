@@ -17,6 +17,7 @@ declare -r LINE=$(printf "%0.1s" -{1..80})
 declare -r MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -x DISPLAY=:7777
 declare -x START_X=false
+declare -x NO_BUILD=false
 declare -a REPOS=()
 
 # -----------------------------------------------------------------------------
@@ -48,7 +49,8 @@ function sync_repo() {
     git checkout master
     git branch -D sync/update-${TIMESTAMP}
   else
-    powershell Other/Update/Update.ps1
+    [[ ${NO_BUILD} == false ]] && \
+      pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1
     git push origin sync/update-${TIMESTAMP}
     hub pull-request -m "${MESSAGE}"
     git checkout master
@@ -90,7 +92,8 @@ function usage() {
 
   Options:
     -h | --help       This message
-    -X | --start-x    Start a hidden X server for the build to go through
+    -X | --start-x    Start a hidden X server for the build to go through.
+    -B | --no-build   Do not build the installer package.
 
 USAGE
   exit ${exit_code}
@@ -101,7 +104,8 @@ USAGE
 function parse_options() {
   while [[ ${#} -gt 0 ]]; do
     case ${1} in
-    -X|--start-x) START_X=true;;
+    -X|--start-x)  START_X=true;;
+    -B|--no-build) NO_BUILD=true;;
     -h|--help)    usage 0;;
     *Portable)    REPOS=( ${REPOS[@]:-} ${1} );;
     *)           usage 1;;
