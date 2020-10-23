@@ -13,16 +13,16 @@ set -o pipefail
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
+declare -r UPDATE_INI=App/AppInfo/update.ini
+declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 declare -g MESSAGE=
 declare -g ITERATION=
-declare -g OLD_VERSION=
+declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ { print $2 }' ${UPDATE_INI})
 declare -g NEW_VERSION=
 declare -g OLD_PACKAGE=
 declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
-declare -r UPDATE_INI=App/AppInfo/update.ini
-declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -34,12 +34,12 @@ function usage() {
   Usage: ${SCRIPT} <options>
   
   Options:
-    -h | --help             This message  
+    -h | --help             This message
     -i | --iteration <N>    Override the iteration
-    -o | --old <version>    Old version string (mandatory)
+    -o | --old <version>    Old version string (optional)
+                            Default: ${OLD_VERSION}
     -n | --new <version>    New version string (mandatory)
-    -m | --message <messag> New version string (mandatory)
-
+    -m | --message <messag> New version string (optional)
 
 USAGE
   exit ${exit_code}
