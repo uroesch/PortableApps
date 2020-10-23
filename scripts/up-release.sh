@@ -23,6 +23,7 @@ declare -g OLD_PACKAGE=
 declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
+declare -g CHECKSUM=
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -34,12 +35,13 @@ function usage() {
   Usage: ${SCRIPT} <options>
   
   Options:
-    -h | --help             This message
-    -i | --iteration <N>    Override the iteration
-    -o | --old <version>    Old version string (optional)
-                            Default: ${OLD_VERSION}
-    -n | --new <version>    New version string (mandatory)
-    -m | --message <messag> New version string (optional)
+    -h | --help              This message
+    -i | --iteration <N>     Override the iteration
+    -o | --old <version>     Old version string (optional)
+                             Default: ${OLD_VERSION}
+    -n | --new <version>     New version string (mandatory)
+    -c | --checksum <sha256> Provide the checksum for the download
+    -m | --message <messag>  New version string (optional)
 
 USAGE
   exit ${exit_code}
@@ -52,6 +54,7 @@ function parse_options() {
     -o|--old)       shift; OLD_VERSION=${1};;
     -n|--new)       shift; NEW_VERSION=${1};;
     -m|--message)   shift; MESSAGE=${1};;
+    -c|--checksum)  shift; CHECKSUM=${1};;
     -h|--help)      usage 0;;
     *)              usage 1;; 
     esac
@@ -129,7 +132,9 @@ function push_release() {
 }
 
 function build_release() {
-  pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1 -UpdateChecksums
+  pwsh -ExecutionPolicy ByPass \
+    -File Other/Update/Update.ps1 \
+    ${CHECKSUM:--UpdateChecksums}
 }
 
 function create_new_release() {
@@ -141,10 +146,18 @@ function create_new_release() {
     -e "s/${old_version//+/}/${NEW_VERSION//+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     ${UPDATE_INI}
+  update_checksum
   build_release
   commit_release 
   create_release_tag
   push_release 
+}
+
+function update_checksum() {
+  [[ -z ${CHECKSUM} ]] && return 0
+  sed -r -i \
+    -e "/^Checksum1/s/(.*)::.*/\\1::${CHECKSUM}/" \
+    ${UPDATE_INI}
 }
 
 function create_pull_request() {
