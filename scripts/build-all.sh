@@ -14,6 +14,7 @@ declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r SCRIPT_DIR=$(readlink -f $(dirname $0))
 declare -r UPDATE_SCRIPT=Update.ps1
 declare -r DIVIDER=$(printf "%0.1s" -{1..80})
+declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -32,12 +33,12 @@ function build_package() {
   script=${1}; shift;
   name=${script#${BASE_DIR}/}
   name=${name%%/*}
-  echo 
+  echo
   echo ${DIVIDER}
-  echo ${name} 
+  echo Building ${name}
   echo ${DIVIDER}
-  pwsh -ExecutionPolicy ByPass ${script}
-  echo 
+  ${POWERSHELL} -ExecutionPolicy ByPass ${script}
+  echo
 }
 
 # -----------------------------------------------------------------------------
