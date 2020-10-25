@@ -76,7 +76,7 @@ git submodule update --recursive --init
 
 # Build PortableApps
 
-## Build single installaller
+## Build single installer
 
 In this example the `PlinkProxyPortable` installer is built.
 
