@@ -83,8 +83,11 @@ In this example the `PlinkProxyPortable` installer is built.
 ```bash
 cd PortableApps 
 cd PlinkProxyPortable
-pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1
+./Other/Update/Update.ps1
 ```
+
+Note: If above command does throw an error on Windows due to execution policy try
+  `powershell -ExecutionPolicy ByPass -File .\\Other\\Update\\Update.ps1`.
 
 ## Build all installers
 
@@ -92,3 +95,6 @@ pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1
 cd PortableApps
 ./scripts/build-all.ps1
 ```
+
+Note: If above command does throw an error on Windows due to execution policy try
+  `powershell -ExecutionPolicy ByPass -File .\\scripts\\build-all.ps1`.
