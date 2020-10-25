@@ -7,8 +7,7 @@
 # Globals
 # -----------------------------------------------------------------------------
 $BaseDir      = Resolve-Path -Path "$PSScriptRoot/.."
-$UpdateScript = Join-Path 'Other' 'Update' 'Update.ps1'
-
+$UpdateScript = [IO.Path]::Combine('Other', 'Update', 'Update.ps1')
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -22,17 +21,25 @@ Function List-Modules() {
 
 # -----------------------------------------------------------------------------
 
+Function Find-Powershell-Path() {
+  If (Get-Command pwsh 2>&1 | Out-Null) { $PSName = 'pwsh' }
+  Else { $PSName = 'powershell' } 
+  (Get-Command $PSName).Path
+}
+
+# -----------------------------------------------------------------------------
 Function Build-Package() {
   Param(
     [Object] $Module
   )
+  $PSPath = Find-Powershell-Path
   $Script = Join-Path $Module.FullName $UpdateScript
   If (!(Test-Path $Script)) { Return } 
   ""
   "-" * $Host.UI.RawUI.WindowSize.Width
   "Building $($Module.Name)"
   "-" * $Host.UI.RawUI.WindowSize.Width
-  Invoke-Expression $Script
+  & $PSPath -ExecutionPolicy ByPass -File $Script
 }
 
 # -----------------------------------------------------------------------------
