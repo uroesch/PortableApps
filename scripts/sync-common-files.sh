@@ -14,7 +14,7 @@ declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r TIMESTAMP=$(date +%F)
 declare -r LINE=$(printf "%0.1s" -{1..80})
-declare -r MESSAGE="Sync common files - ${TIMESTAMP}"
+declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -x DISPLAY=:7777
 declare -x START_X=false
 declare -x NO_BUILD=false
@@ -92,6 +92,8 @@ function usage() {
 
   Options:
     -h | --help       This message
+    -m | --message    Set commit message for Git commit
+                      Default: "${MESSAGE}"
     -X | --start-x    Start a hidden X server for the build to go through.
     -B | --no-build   Do not build the installer package.
 
@@ -104,6 +106,7 @@ USAGE
 function parse_options() {
   while [[ ${#} -gt 0 ]]; do
     case ${1} in
+    -m|--message)  shift; MESSAGE="${1}";;
     -X|--start-x)  START_X=true;;
     -B|--no-build) NO_BUILD=true;;
     -h|--help)    usage 0;;
