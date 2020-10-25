@@ -21,10 +21,10 @@ Function List-Modules() {
 
 # -----------------------------------------------------------------------------
 
-Function Find-Powershell-Path() {
-  If (Get-Command pwsh 2>&1 | Out-Null) { $PSName = 'pwsh' }
-  Else { $PSName = 'powershell' } 
-  (Get-Command $PSName).Path
+Function Which-Powershell() {
+  If (Get-Command pwsh -ErrorAction SilentlyContinue) { $Name = 'pwsh' }
+  Else { $Name = 'powershell' }
+  (Get-Command $Name).Path
 }
 
 # -----------------------------------------------------------------------------
@@ -32,9 +32,9 @@ Function Build-Package() {
   Param(
     [Object] $Module
   )
-  $PSPath = Find-Powershell-Path
+  $PSPath = Which-Powershell
   $Script = Join-Path $Module.FullName $UpdateScript
-  If (!(Test-Path $Script)) { Return } 
+  If (!(Test-Path $Script)) { Return }
   ""
   "-" * $Host.UI.RawUI.WindowSize.Width
   "Building $($Module.Name)"
