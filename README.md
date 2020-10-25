@@ -1,3 +1,6 @@
+![build-all-packages](https://github.com/uroesch/PortableApps/workflows/build-all-packages/badge.svg)
+![daily-submodules-sync](https://github.com/uroesch/PortableApps/workflows/daily-submodules-sync/badge.svg)
+
 # Personal PortableApps Meta Repository 
 This is my personal meta repository holding all my PortableApps
 repositories and some useful scripts.
