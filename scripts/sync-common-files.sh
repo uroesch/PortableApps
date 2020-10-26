@@ -14,6 +14,7 @@ declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r TIMESTAMP=$(date +%F)
 declare -r LINE=$(printf "%0.1s" -{1..80})
+declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -x DISPLAY=:7777
 declare -x START_X=false
@@ -50,7 +51,7 @@ function sync_repo() {
     git branch -D sync/update-${TIMESTAMP}
   else
     [[ ${NO_BUILD} == false ]] && \
-      pwsh -ExecutionPolicy ByPass -File Other/Update/Update.ps1
+      ${POWERSHELL} -ExecutionPolicy ByPass -File Other/Update/Update.ps1
     git push origin sync/update-${TIMESTAMP}
     hub pull-request -m "${MESSAGE}"
     git checkout master
