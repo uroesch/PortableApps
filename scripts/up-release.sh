@@ -137,8 +137,17 @@ function build_release() {
     ${CHECKSUM:--UpdateChecksums}
 }
 
+function escape_regex() {
+  local string=${1}
+  string=${string//\./\\.}
+  string=${string//\+/\\+}
+  string=${string//\*/\\*}
+  echo ${string}
+}
+
 function create_new_release() {
-  local old_version=${OLD_VERSION//\./\\.}
+  local old_version=$(escape_regex "${OLD_VERSION}")
+
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
     -e "s/${old_version}/${NEW_VERSION}/g" \
