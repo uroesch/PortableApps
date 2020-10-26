@@ -1,9 +1,9 @@
 # -----------------------------------------------------------------------------
-# Sync submodules daily 
+# Sync submodules daily
 # Author: Urs Roesch https://github.com/uroesch
 # Version: 0.1.0
 # -----------------------------------------------------------------------------
-name: daily-submodules-sync
+name: daily-submodule-sync
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  daily-submodules-sync:
+  daily-submodule-sync:
     timeout-minutes: 90
     runs-on: ${{ matrix.os }}
     strategy:
@@ -36,7 +36,7 @@ jobs:
         set -x
         git config user.name "Urs Roesch"
         git config user.email "github@bun.ch"
-        
+
     - name: Update apps and commit
       shell: bash
       run: |2+

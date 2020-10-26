@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------
+# Sync CommonFiles daily
+# Author: Urs Roesch https://github.com/uroesch
+# Version: 0.1.0
+# -----------------------------------------------------------------------------
+name: daily-commonfiles-sync
+
+on:
+  push:
+    branches:
+    - workflow/*
+  schedule:
+    - cron: '20 2 * * *' # Sync submodules daily
+  workflow_dispatch:
+
+jobs:
+  daily-commonfiles-sync:
+    timeout-minutes: 90
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+        - ubuntu-latest
+
+    steps:
+    - name: Cache apt directory cache
+      if: runner.os == 'Linux'
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-apt-pkgs
+      with:
+        path: /var/cache/apt/archive
+        key: build-package-${{ env.cache-name }}-${{ hashFiles('*deb') }}
+        restore-keys: |
+          build-package-${{ env.cache-name }}-
+
+    - name: Install Wine ~ hick ~
+      if: runner.os == 'Linux'
+      shell: bash
+      run: >
+        sudo dpkg --add-architecture i386 &&
+        sudo apt-get update &&
+        sudo apt-get -y install wine32
+
+    - name: Install Virtual Frame Buffer
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get -y install xvfb
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        ref: master
+        submodules: recursive
+
+    - name: Setup git
+      shell: bash
+      run: |2+
+        set -x
+        git config --global user.name "Urs Roesch"
+        git config --global user.email "github@bun.ch"
+        git config --global pull.rebase true
+
+    - name: Update common files
+      shell: bash
+      run: bash ./scripts/sync-common-files.sh --start-x
