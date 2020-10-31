@@ -115,6 +115,7 @@ function build_on_docker() {
   local name=${1}
   printf "%s\n%s\n%s\n\n" "${DIVIDER}" "Building ${name}" "${DIVIDER}"
   docker run \
+    --rm \
     --tty \
     --env USER_UID=$(id --user) \
     --env USER_GID=$(id --group) \
