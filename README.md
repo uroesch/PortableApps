@@ -3,7 +3,8 @@
 
 # Personal PortableApps Meta Repository
 This is my personal meta repository holding all my PortableApps
-repositories and some useful scripts.
+repositories and some useful scripts for helping with building and 
+updating.
 
 
 # Build environment setup
@@ -63,7 +64,7 @@ are no other dependecies.
 ```bash
 git clone --recursive https://github.com/uroesch/PortableApps.git
 cd PortableApps
-./scripts/docker-build -all
+./scripts/docker-build --all
 ```
 ## Windows
 
@@ -92,6 +93,8 @@ submodules with this command.
 ```bash
 git submodule update --recursive --init
 ```
+
+---
 
 # Build PortableApps
 
