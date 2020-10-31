@@ -1,7 +1,7 @@
 ![build-all-packages](https://github.com/uroesch/PortableApps/workflows/build-all-packages/badge.svg)
 ![daily-submodules-sync](https://github.com/uroesch/PortableApps/workflows/daily-submodules-sync/badge.svg)
 
-# Personal PortableApps Meta Repository 
+# Personal PortableApps Meta Repository
 This is my personal meta repository holding all my PortableApps
 repositories and some useful scripts.
 
@@ -13,8 +13,8 @@ repositories and some useful scripts.
 ### Ubuntu 18.04
 
 At this point in time the only verified build environemnt on Linux is
-Ubuntu 18.04. There are a few dependencies to be installed to build 
-the PortableApps included in this repository. 
+Ubuntu 18.04. There are a few dependencies to be installed to build
+the PortableApps included in this repository.
 
 Namely:
 * PowerShell
@@ -48,13 +48,32 @@ sudo apt-get -y install p7zip-full
 sudo apt-get -y install xvfb
 ```
 
-## Windows 
+### Docker
+
+This is a fairly new way to build on Linux and may still consist
+a few issues here or there.
+
+The dependencies such as wine and powershell are all packed into
+the docker container so other than the omnipresent `bash` shell
+and `git` and obviously a working installation of `docker` there
+are no other dependecies.
+
+### Installation instructions
+
+```bash
+git clone --recursive https://github.com/uroesch/PortableApps.git
+cd PortableApps
+./scripts/docker-build -all
+```
+## Windows
 
 ### Windows 10
 
 Windows 10 should work out of the box as far as the supporting scripts
 are concerned the only dependency required to be installed is a version
 of Git.
+
+---
 
 # Clone repositories
 
@@ -63,14 +82,14 @@ of Git.
 Since there are few `submodules` linked in this repo the usual
 clone command does not apply.
 
-```
+```bash
 git clone --recursive https://github.com/uroesch/PortableApps.git
 ```
 
 If you forgot the `--recursive` option you can populate the
 submodules with this command.
 
-```
+```bash
 git submodule update --recursive --init
 ```
 
@@ -81,7 +100,7 @@ git submodule update --recursive --init
 In this example the `PlinkProxyPortable` installer is built.
 
 ```bash
-cd PortableApps 
+cd PortableApps
 cd PlinkProxyPortable
 ./Other/Update/Update.ps1
 ```
