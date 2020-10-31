@@ -17,11 +17,17 @@
 .PARAMETER SkipInfra
   Skip deletion of the PortableApps.com build infractructure
   installers with pattern 'PortableApps.com*.paf.exe'.
+
+.PARAMETER CleanDownloads
+  Also cleanup the Download directory under each application
+  directory e.g '*Portable/Downloads/*'
+  
 #>
 
 Param(
   [Switch] $SkipApps,
-  [Switch] $SkipInfra
+  [Switch] $SkipInfra,
+  [Switch] $CleanDownloads
 )
 # -----------------------------------------------------------------------------
 # Globals
@@ -31,12 +37,11 @@ $InstallersDir = Resolve-Path "$PSScriptRoot/.."
 # -----------------------------------------------------------------------------
 # Functions
 # -----------------------------------------------------------------------------
-Function Remove-Installers() {
+Function Remove-Files() {
   Param(
-    [String] $Filter,
-    [String] $Message
+    [String] $Message,
+    [Object] $Files
   )
-  $Files = Get-ChildItem -Path $InstallersDir -File -Filter $Filter
   If ($Files.Count -eq 0) { Return }
   $Message -f $Files.Count, $InstallersDir
   $Files | ForEach-Object {
@@ -45,20 +50,38 @@ Function Remove-Installers() {
   }
 }
 
-Function Remove-App-Installers() {
+Function Remove-Installers() {
+  Param(
+    [String] $Filter,
+    [String] $Message
+  )
+  $Files = Get-ChildItem -Path $InstallersDir -File -Filter $Filter
+  Remove-Files -Message $Message -Files $Files
+}
+
+Function Remove-AppInstallers() {
   If ($SkipApps) { Return }
   $Message = "Removing {0} PortableApps installers from '{1}'"
   Remove-Installers -Filter "*Portable_*.paf.exe" -Message $Message
 }
 
-Function Remove-Infra-Installers() {
+Function Remove-InfraInstallers() {
   If ($SkipInfra) { Return }
   $Message = "Removing {0} build infrastructure installers from '{1}'"
   Remove-Installers -Filter "PortableApps.com*.paf.exe" -Message $Message
 }
 
+Function Clean-DownloadDirectory() {
+  If (!($CleanDownloads)) { Return }
+  $Files = Get-Childitem -Path "$InstallersDir" -Recurse -File | `
+    ForEach-Object { If ($_.Directory -Match "Download$") { $_.FullName } }  
+  $Message = "Removing {0} Files from '{1}/*Portable/Download' directories"
+  Remove-Files -Message $Message -Files $Files
+}
+
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-Remove-App-Installers
-Remove-Infra-Installers
+Remove-AppInstallers
+Remove-InfraInstallers
+Clean-DownloadDirectory
