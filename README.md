@@ -23,6 +23,7 @@ Namely:
 * Git
 * 7zip
 * Xfvb [optional]
+* hub [optional]
 
 #### Installation instructions
 
@@ -47,6 +48,11 @@ sudo apt-get -y install p7zip-full
 5. Install Virtual Frame Buffer
 ```bash
 sudo apt-get -y install xvfb
+```
+
+6. Install the `hub` tool (github)
+```bash
+sudo apt-get -y install hub
 ```
 
 ### Docker
