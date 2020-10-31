@@ -161,7 +161,7 @@ Function Create-Release {
   }
   Create-Checksums-File -Package $Package
   Create-Release-Message -Package $Package
-  & git hub release create $Options `
+  & hub release create $Options `
     -a $Package.Path `
     -a "$SumsFile" `
     -F "$MessageFile" `

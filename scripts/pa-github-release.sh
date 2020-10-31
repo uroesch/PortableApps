@@ -94,7 +94,7 @@ function create_release() {
   *beta*|*alpha*|*rc*) options="${options} -p";;
   esac
   assemble_release_message
-  git hub release create ${options} \
+  hub release create ${options} \
     -a $(find_installer) \
     -a ${SUMS_FILE} \
     -F <( assemble_release_message ) \
