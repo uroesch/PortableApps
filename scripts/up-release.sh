@@ -17,6 +17,7 @@ declare -r UPDATE_INI=App/AppInfo/update.ini
 declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 declare -g MESSAGE=
 declare -g ITERATION=
+declare -g BUILD_METHOD=powershell
 declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ { print $2 }' ${UPDATE_INI})
 declare -g NEW_VERSION=
 declare -g OLD_PACKAGE=
@@ -31,11 +32,12 @@ declare -g CHECKSUM=
 function usage() {
   local exit_code=${1:-1}; shift
   cat <<USAGE
-  
+
   Usage: ${SCRIPT} <options>
-  
+
   Options:
     -h | --help              This message
+    -d | --docker            Build with docker instead of powershell
     -i | --iteration <N>     Override the iteration
     -o | --old <version>     Old version string (optional)
                              Default: ${OLD_VERSION}
@@ -47,22 +49,23 @@ USAGE
   exit ${exit_code}
 }
 
-function parse_options() { 
+function parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
+    -d|--docker)    BUILD_METHOD=docker;;
     -i|--iteration) shift; ITERATION=${1};;
     -o|--old)       shift; OLD_VERSION=${1};;
     -n|--new)       shift; NEW_VERSION=${1};;
     -m|--message)   shift; MESSAGE=${1};;
     -c|--checksum)  shift; CHECKSUM=${1};;
     -h|--help)      usage 0;;
-    *)              usage 1;; 
+    *)              usage 1;;
     esac
     shift
   done
 }
 
-function verify_options() { 
+function verify_options() {
   for option in NEW_VERSION OLD_VERSION; do
     if [[ -z ${!option} ]]; then
       printf "\nMissing option --old or --new\n"
@@ -84,7 +87,7 @@ function define_release_variables() {
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
   NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
-    echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'" 
+    echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
     exit 255
   fi
   format_package_version
@@ -99,22 +102,22 @@ function create_new_branch() {
   local checkout_option=""
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
     checkout_option="-b"
-  fi 
-  git checkout ${checkout_option} release/${NEW_RELEASE} 
+  fi
+  git checkout ${checkout_option} release/${NEW_RELEASE}
 }
 
 function create_release_tag() {
   # clean tag if already exits
-  if git tag | grep ${NEW_RELEASE}; then 
-    git tag --delete ${NEW_RELEASE} 
-  fi 
+  if git tag | grep ${NEW_RELEASE}; then
+    git tag --delete ${NEW_RELEASE}
+  fi
   git tag ${NEW_RELEASE}
 }
 
 function message() {
   if [[ -n $MESSAGE ]]; then
     echo "${MESSAGE}"
-  else 
+  else
     printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION}
   fi
 }
@@ -131,10 +134,22 @@ function push_release() {
   git push origin ${NEW_RELEASE}
 }
 
-function build_release() {
-  pwsh -ExecutionPolicy ByPass \
+function build_with_powershell() {
+  pwsh \
+    -ExecutionPolicy ByPass \
     -File Other/Update/Update.ps1 \
     ${CHECKSUM:--UpdateChecksums}
+}
+
+function build_with_docker() {
+  ${SCRIPT_DIR}/docker-build.sh --up-release
+}
+
+function build_release() {
+  case ${BUILD_METHOD} in
+  docker) build_with_docker;;
+  *)      build_with_powershell;;
+  esac
 }
 
 function escape_regex() {
@@ -157,9 +172,9 @@ function create_new_release() {
     ${UPDATE_INI}
   update_checksum
   build_release
-  commit_release 
+  commit_release
   create_release_tag
-  push_release 
+  push_release
 }
 
 function update_checksum() {
@@ -170,12 +185,12 @@ function update_checksum() {
 }
 
 function create_pull_request() {
-  git hub pull-request --message "$(message)"
+  hub pull-request --message "$(message)"
 }
 
 function wait_for_ci_status() {
   for count in {1..20}; do
-    git hub ci-status | grep -q success && return 0
+    hub ci-status | grep -q success && return 0
     sleep 60
   done
   echo timeout of 20 minutes reached!

@@ -14,6 +14,7 @@ declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r SCRIPT_DIR=$(readlink -f $(dirname $0))
 declare -r UPDATE_SCRIPT=Other/Update/Update.ps1
+declare -a UPDATE_OPTIONS=()
 declare -r DIVIDER=$(printf "%0.1s" -{1..80})
 declare -g DOCKER_IMAGE=uroesch/pa-wine:latest
 declare -g BUILD_ALL=false
@@ -34,16 +35,17 @@ function usage() {
     -h | --help             This message
     -A | --all              Build all packages
     -b | --build <PA-name>  Build package with name
-   
+    -u | --up-release       Run in upgrade release mode
+
   Examples:
     Build all PortableApps packages in repository
-    ${SCRIPT} --all 
+    ${SCRIPT} --all
 
     Build PortableApps package 'PlinkProxyPortable'
     ${SCRIPT} --build PlinkProxyPortable
 
     Build 'PlinkProxyPortable' by changing to directory
-    cd PlinkProxyPortable && ../scripts/${SCRIPT} 
+    cd PlinkProxyPortable && ../scripts/${SCRIPT}
 
   Description:
     Builds PortableApps packages from Git repository
@@ -57,22 +59,26 @@ USAGE
 function parse_options() {
   while (( ${#} > 0 )); do
     case ${1} in
+    -u|--up-release)
+      UPDATE_OPTIONS+=( -UpdateChecksums )
+      ;;
     -A|--all)
-      BUILD_ALL=true;;
-    -b|--build) 
+      BUILD_ALL=true
+      ;;
+    -b|--build)
       shift;
-      BUILD_ALL=false 
+      BUILD_ALL=false
       BUILD+=( "${1}" )
       ;;
-    -h|--help) 
+    -h|--help)
       usage 0
       ;;
-    *) 
+    *)
       usage 1
       ;;
     esac
     shift
-  done  
+  done
 }
 
 # -----------------------------------------------------------------------------
@@ -94,16 +100,16 @@ function build_packages() {
   elif (( ${#BUILD[@]} == 0 )); then
     name=$(pwd)
     case ${name} in
-    *Portable) 
+    *Portable)
       build_on_docker ${name##*/}
       ;;
     *)
       printf "\n  No options specified an not in a *Portable directory!\n\n"
       exit 123
       ;;
-    esac    
+    esac
   fi
-  
+
   for name in ${BUILD[@]}; do
     build_on_docker ${name}
   done
@@ -122,7 +128,7 @@ function build_on_docker() {
     --mount type=bind,src=${BASE_DIR},target=/PortableApps \
     --workdir=/PortableApps/${name} \
     ${DOCKER_IMAGE} \
-    pwsh -ExecutionPolicy ByPass ${UPDATE_SCRIPT}
+    pwsh -ExecutionPolicy ByPass ${UPDATE_SCRIPT} ${UPDATE_OPTIONS[@]}
 }
 
 # -----------------------------------------------------------------------------
