@@ -16,9 +16,9 @@ declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r TIMESTAMP=$(date +%F)
 declare -r LINE=$(printf "%0.1s" -{1..80})
 declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
+declare -g DISPLAY_PORT=:7777
 declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -g BUILD_METHOD=powershell
-declare -x DISPLAY=:7777
 declare -x START_X=false
 declare -x NO_BUILD=false
 declare -a REPOS=()
@@ -27,7 +27,8 @@ declare -a REPOS=()
 # Functions
 # -----------------------------------------------------------------------------
 function start_x() {
-  [[ ${START_X} != true ]] && return 0
+  [[ ${START_X} == false ]] && return 0
+  export DISPLAY=${DISPLAY_PORT}
   pkill -f "Xvfb ${DISPLAY}" || :
   sleep 1
   Xvfb ${DISPLAY} -ac &
