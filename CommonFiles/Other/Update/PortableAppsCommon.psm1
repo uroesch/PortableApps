@@ -2,7 +2,7 @@
 # Description: Common classes and functions for portable apps powershell
 #   scripts
 # Author: Urs Roesch <github@bun.ch>
-# Version: 0.5.2
+# Version: 0.5.3
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -202,6 +202,7 @@ Function Download-Checksum() {
     $OutFile = Join-Path $DownloadDir ($Uri.split('/'))[-1]
     Invoke-WebRequest -Uri $Uri -OutFile $OutFile
     $Sum = Get-Content -Path $OutFile
+    Debug debug "Downloaded checksum: $Sum"
     Return $Sum
   }
   Catch {
@@ -219,15 +220,18 @@ Function Compare-Checksum {
     [string] $Checksum
   )
 
+  Debug debug "Compare-Checksum -> -Path $Path -Checksum $Checksum"
   # The somewhat involved split is here to make it compatible with win10
   ($Algorithm, $Sum) = ($Checksum -replace '::', "`n").Split("`n")
   If ($Sum -like 'http*') {
     $Sum = Download-Checksum -Uri $Sum
     $Checksum = $Algorithm + "::" + $Sum
+    Debug debug "Checksum from download: $Checksum"
   }
+  Debug debug "Get-Checksum -Path $Path -Algorithm $Algorithm"
   $Result = Get-Checksum -Path $Path -Algorithm $Algorithm
   Debug info "Checksum of INI ($($Checksum.ToUpper())) and download ($Result)"
-  return ($Checksum.ToUpper() -eq $Result)
+  Return ($Checksum.ToUpper() -eq $Result)
 }
 
 # -----------------------------------------------------------------------------
@@ -236,6 +240,7 @@ Function Get-Checksum {
     [string] $Path,
     [string] $Algorithm
   )
+  Debug debug "Get-FileHash -Path $Path -Algorithm $Algorithm"
   $Hash = (Get-FileHash -Path $Path -Algorithm $Algorithm).Hash
   Return ($Algorithm + "::" + $Hash).ToUpper()
 }
@@ -246,8 +251,10 @@ Function Update-Checksum {
     [string] $Path,
     [string] $Checksum
   )
-  ($Algorithm, $Sum) = $Checksum.Split('::')
-  If ($Sum -like 'http*') { Return }
+  Debug debug "Update-Checksum -> -Path $Path -Checksum $Checksum"
+  ($Algorithm, $Sum) = ($Checksum -replace '::', "`n").Split("`n")
+  If ($Sum -like 'http*') { Return $Checksum }
+  Debug debug "Get-Checksum -Path $Path -Algorithm $Algorithm"
   $NewChecksum = Get-Checksum -Path $Path -Algorithm $Algorithm
   Get-Content -Path $UpdateIni | `
     Foreach-Object { $_ -Replace $Checksum, $NewChecksum } | `
