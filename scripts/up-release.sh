@@ -160,18 +160,27 @@ function escape_regex() {
   echo ${string}
 }
 
+function update_upstream() {
+  local old_version=${1}
+  sed -r -i \
+    -e "/^Upstream/s/${old_version}/${NEW_VERSION}/g" \
+    -e "/^Upstream/s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
+    -e "/^Upstream/s/${old_version//+/}/${NEW_VERSION//+}/g" \
+    ${UPDATE_INI}
+}
+
 function create_new_release() {
   local old_version=$(escape_regex "${OLD_VERSION}")
-
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
-    -e "s/${old_version}/${NEW_VERSION}/g" \
-    -e "s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
-    -e "s/${old_version//+/}/${NEW_VERSION//+}/g" \
+    -e '/^Upstream/!'"s/${old_version}/${NEW_VERSION}/g" \
+    -e '/^Upstream/!'"s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
+    -e '/^Upstream/!'"s/${old_version//+/}/${NEW_VERSION//+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     ${UPDATE_INI}
   update_checksum
   build_release
+  update_upstream "${old_version}"
   commit_release
   create_release_tag
   push_release
