@@ -69,4 +69,6 @@ jobs:
 
     - name: Update common files
       shell: bash
-      run: bash -x ./scripts/sync-common-files.sh --start-x
+      run: |2+
+        git config --list 
+        bash -x ./scripts/sync-common-files.sh --start-x
