@@ -53,12 +53,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        ref: master
-        submodules: recursive
-
     - name: Setup git
       shell: bash
       run: |2+
