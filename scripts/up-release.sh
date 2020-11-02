@@ -194,7 +194,7 @@ function update_checksum() {
 }
 
 function create_pull_request() {
-  hub pull-request --message "$(message)"
+  hub pull-request -m "$(message)"
 }
 
 function wait_for_ci_status() {
