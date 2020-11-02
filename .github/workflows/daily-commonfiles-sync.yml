@@ -69,4 +69,4 @@ jobs:
 
     - name: Update common files
       shell: bash
-      run: bash ./scripts/sync-common-files.sh --start-x
+      run: bash -x ./scripts/sync-common-files.sh --start-x
