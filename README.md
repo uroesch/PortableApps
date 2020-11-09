@@ -11,6 +11,35 @@ updating.
 
 ## Linux
 
+### Docker
+
+This is a fairly new way to build on Linux but already the
+recommended build procedure.
+
+The dependencies such as `wine` and `powershell` are all contained 
+in the docker container so other than the omnipresent `bash` shell
+and `git` and obviously a working installation of `docker` there
+are no other dependecies.
+
+#### Installation instructions
+
+1. Install dependencies
+```bash
+sudo apt install docker.io git
+```
+
+2. Setup docker
+```bash
+sudo useradd -a -G docker ${USER}
+```
+
+3. Build PortableApps
+```bash
+git clone --recursive https://github.com/uroesch/PortableApps.git
+cd PortableApps
+./scripts/docker-build.sh --all
+```
+
 ### Ubuntu 18.04
 
 At this point in time the only verified build environemnt on Linux is
@@ -55,23 +84,6 @@ sudo apt-get -y install xvfb
 sudo apt-get -y install hub
 ```
 
-### Docker
-
-This is a fairly new way to build on Linux and may still consist
-a few issues here or there.
-
-The dependencies such as wine and powershell are all packed into
-the docker container so other than the omnipresent `bash` shell
-and `git` and obviously a working installation of `docker` there
-are no other dependecies.
-
-### Installation instructions
-
-```bash
-git clone --recursive https://github.com/uroesch/PortableApps.git
-cd PortableApps
-./scripts/docker-build --all
-```
 ## Windows
 
 ### Windows 10
