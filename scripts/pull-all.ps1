@@ -102,6 +102,7 @@ Function Sync-Repository() {
   Catch {
     $Error[0].Exception.Message
     "Failed to sync '$Submodule'"
+    Exit 123
   }
 }
 
@@ -133,7 +134,8 @@ Function Update-Submodule() {
     }
   }
   Catch {
-    "Failed to fetch '$RepoName'"
+    "Failed to sync '$RepoName'"
+    Exit 124
   }
 }
 
