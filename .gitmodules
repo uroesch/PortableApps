@@ -55,3 +55,9 @@
 [submodule "DrawIOPortable"]
 	path = DrawIOPortable
 	url = https://github.com/uroesch/DrawIOPortable.git
+[submodule "PortableAppsTemplate"]
+	path = PortableAppsTemplate
+	url = https://github.com/uroesch/PortableAppsTemplate.git
+[submodule "CmderMiniPortable"]
+	path = CmderMiniPortable
+	url = https://github.com/uroesch/CmderMiniPortable.git
