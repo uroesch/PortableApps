@@ -61,3 +61,6 @@
 [submodule "CmderMiniPortable"]
 	path = CmderMiniPortable
 	url = https://github.com/uroesch/CmderMiniPortable.git
+[submodule "CmderPortable"]
+	path = CmderPortable
+	url = https://github.com/uroesch/CmderPortable.git
