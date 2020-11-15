@@ -14,8 +14,8 @@ $Debug        = $True
 $Files        = @(
   (Join-Path $AppRoot help.html)
   (Join-Path $AppRoot README.md)
-  $AppInfoIni 
-  $UpdateIni 
+  $AppInfoIni
+  $UpdateIni
 )
 
 $Placeholders = @{
@@ -26,7 +26,7 @@ $Placeholders = @{
   AppNameSpaced = @{
     Message = 'Application name with spaces e.g. "Foo Portable"'
     Value   = ''
-  } 
+  }
   UpstreamPublisher = @{
     Message = 'Publishers name e.g. "ACME Ltd."'
     Value   = ''
@@ -47,7 +47,7 @@ $Placeholders = @{
     Message = 'App category e.g. "Utilities"'
     Value   = 'Utilities'
   }
-  Language = @{ 
+  Language = @{
     Message = 'Installer language e.g. "Multilingual"'
     Value   = 'Multilingual'
   }
@@ -91,7 +91,7 @@ Function Assign-Placeholder() {
   }
 }
 
-Function Replace-Placeholder() { 
+Function Replace-Placeholder() {
   Param(
     [String] $Key,
     [String] $Content
@@ -105,10 +105,10 @@ Function Replace-Placeholder() {
   $Content
 }
 
-Function Replace-Placeholders() { 
-  Foreach ($Path in $Files) { 
+Function Replace-Placeholders() {
+  Foreach ($Path in $Files) {
     $Content = Get-Content -Path $Path -Raw
-    $Placeholders.Keys | ForEach { 
+    $Placeholders.Keys | ForEach {
       If ($Placeholders[$_].Value -ne "") {
         $Content = Replace-Placeholder -Key $_ -Content $Content
       }
@@ -139,7 +139,7 @@ Function Rename-Launcher() {
 }
 
 Function Query-GitOrigin() {
-  $Origin = git config --get remote.origin.url 
+  $Origin = git config --get remote.origin.url
   If ($Origin -match '^http') {
     # extract the project url
     $Origin = $Origin -replace ".git$", ""
@@ -153,12 +153,12 @@ Function Query-GitOrigin() {
 Function Ask-Question() {
   Param(
     [String] $Key
-  ) 
+  )
   $Value  = $Placeholders[$Key].Value
   $Prompt = "`nPlaceholer {0} {1}`nDefault [{2}]" -f `
     $Key, $Placeholders[$Key].Message, $Value
-  $Result = Read-Host -Prompt $Prompt 
-  $Result = $Result.Trim() 
+  $Result = Read-Host -Prompt $Prompt
+  $Result = $Result.Trim()
   If ($Result -ne '') {
     Assign-Placeholder -Key $Key -Value $Result
     Return
@@ -180,8 +180,6 @@ Function Questionaire() {
 # -----------------------------------------------------------------------------
 # Functions
 # -----------------------------------------------------------------------------
-#$Files | %{ $_ }
-#$Placeholders 
 Check-Initial
 Rename-Launcher
 Query-GitOrigin

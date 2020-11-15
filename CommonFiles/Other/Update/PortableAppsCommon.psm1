@@ -261,7 +261,7 @@ Function Update-Checksum {
   Get-Content -Path $UpdateIni | `
     Foreach-Object { $_ -Replace $Checksum, $NewChecksum } | `
     Set-Content -Path $UpdateIni
-  Return $NewChecksum 
+  Return $NewChecksum
 }
 
 # -----------------------------------------------------------------------------
