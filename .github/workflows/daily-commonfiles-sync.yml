@@ -9,8 +9,8 @@ on:
   push:
     branches:
     - workflow/*
-  schedule:
-    - cron: '20 2 * * *' # Sync submodules daily
+  #schedule:
+  #  - cron: '20 2 * * *' # Sync submodules daily
   workflow_dispatch:
 
 jobs:
