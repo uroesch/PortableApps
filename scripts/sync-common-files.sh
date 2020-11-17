@@ -19,8 +19,9 @@ declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 declare -g DISPLAY_PORT=:7777
 declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -g BUILD_METHOD=powershell
-declare -x START_X=false
-declare -x NO_BUILD=false
+declare -g TEMPLATE=false
+declare -g START_X=false
+declare -g NO_BUILD=false
 declare -a REPOS=()
 
 # -----------------------------------------------------------------------------
@@ -97,7 +98,9 @@ function print_header() {
 function sync_repos() {
   local -a modules=( ${@} )
   cd ${BASE_DIR}
-  if [[ -z ${modules:-} ]]; then
+  if [[ ${TEMPLATE} == true ]]; then
+    modules=$(ls -d *Template)
+  elif [[ -z ${modules:-} ]]; then
     modules=$(ls -d *Portable)
   fi
   for repo_name in ${modules[@]}; do
@@ -120,8 +123,9 @@ function usage() {
     -d | --docker     Build with docker instead of powershell
     -m | --message    Set commit message for Git commit
                       Default: "${MESSAGE}"
-    -X | --start-x    Start a hidden X server for the build to go through.
     -B | --no-build   Do not build the installer package.
+    -T | --template   Only sync with the template repository.
+    -X | --start-x    Start a hidden X server for the build to go through.
 
 USAGE
   exit ${exit_code}
@@ -136,6 +140,7 @@ function parse_options() {
     -m|--message)  shift; MESSAGE="${1}";;
     -X|--start-x)  START_X=true;;
     -B|--no-build) NO_BUILD=true;;
+    -T|--template) NO_BUILD=true; TEMPLATE=true;;
     -h|--help)    usage 0;;
     *Portable)    REPOS=( ${REPOS[@]:-} ${1} );;
     *)           usage 1;;
