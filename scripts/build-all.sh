@@ -61,7 +61,12 @@ function file_list() {
 # -----------------------------------------------------------------------------
 
 function build_with_powershell() {
-  script=${1}; shift
+  local name=${1}; shift
+  local script=${1}; shift
+  echo ${DIVIDER}
+  echo Building ${name}
+  echo ${DIVIDER}
+  echo
   pwsh \
     -ExecutionPolicy ByPass \
     -File ${script} \
@@ -71,7 +76,7 @@ function build_with_powershell() {
 # -----------------------------------------------------------------------------
 
 function build_with_docker() {
-  name=${1}; shift
+  local name=${1}; shift
   cd ${BASE_DIR}/${name} && \
     ${SCRIPT_DIR}/docker-build.sh
 }
@@ -85,13 +90,9 @@ function build_package() {
   script=${1}; shift;
   name=${script#${BASE_DIR}/}
   name=${name%%/*}
-  echo
-  echo ${DIVIDER}
-  echo Building ${name}
-  echo ${DIVIDER}
   case ${BUILD_METHOD} in
   docker) build_with_docker ${name};;
-  *)      build_with_powershell ${script};;
+  *)      build_with_powershell ${name} ${script};;
   esac
   echo
 }
