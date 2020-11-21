@@ -14,7 +14,7 @@ declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r SCRIPT_DIR=$(readlink -f $(dirname $0))
 declare -r UPDATE_SCRIPT=Other/Update/Update.ps1
-declare -a UPDATE_OPTIONS=()
+declare -a UPDATE_OPTIONS=( -InfraDir /pa-build )
 declare -r DIVIDER=$(printf "%0.1s" -{1..80})
 declare -g DOCKER_IMAGE=uroesch/pa-wine:latest
 declare -g BUILD_ALL=false
@@ -56,6 +56,7 @@ USAGE
 }
 
 # -----------------------------------------------------------------------------
+
 function parse_options() {
   while (( ${#} > 0 )); do
     case ${1} in
