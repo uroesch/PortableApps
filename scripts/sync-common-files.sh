@@ -11,8 +11,11 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
+declare -r VERSION=0.4.0
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
+declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
+declare -r INCLUDES_DIR="${COMMONFILES_DIR}/_includes"
 declare -r TIMESTAMP=$(date +%F)
 declare -r LINE=$(printf "%0.1s" -{1..80})
 declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
@@ -69,7 +72,8 @@ function sync_repo() {
   else
     git checkout -b sync/update-${TIMESTAMP}
   fi
-  rsync -av ../CommonFiles/ .
+  rsync -av --exclude=${INCLUDES_DIR##*/} ${COMMONFILES_DIR}/./ .
+  replace_includes
   git add .
   git status
   if ! git commit -a -m "${MESSAGE}"; then
@@ -81,6 +85,22 @@ function sync_repo() {
     hub pull-request -m "${MESSAGE}"
     git checkout master
   fi
+}
+
+# -----------------------------------------------------------------------------
+
+function replace_includes() { 
+  for file in $(find ${INCLUDES_DIR} -name "*.md"); do
+    local basename=${file##*/}
+    local start="<!-- Start include ${basename} -->"
+    local end="<!-- End include ${basename} -->"
+    sed -i -e "/${start}/,/${end}/{
+      /${start}/!{
+        /${end}/!d;
+        e cat '${file}'
+      } 
+    }" README.md 
+  done
 }
 
 # -----------------------------------------------------------------------------
