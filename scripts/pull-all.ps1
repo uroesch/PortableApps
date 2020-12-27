@@ -14,6 +14,10 @@
   Skip update of the App submodules.
   Apps submodules are ending in 'Portable'.
 
+.PARAMETER SkipTemplates
+  Skip the template submodules.
+  Template submodules ending with 'Template'.
+
 .PARAMETER SkipInfra
   Skip the Infra submodules 
   Infra submodules starting with 'PortableApps.com'.
@@ -24,6 +28,7 @@
 
 Param(
   [Switch] $SkipApps,
+  [Switch] $SkipTemplates,
   [Switch] $SkipInfra,
   [Switch] $Debug
 )
@@ -146,6 +151,12 @@ Function Update-Applications() {
 }
 
 # -----------------------------------------------------------------------------
+Function Update-Templates() {
+  If ($SkipTemplates) { Return }
+  Update-Submodule -Pattern '.*Template$'
+}
+
+# -----------------------------------------------------------------------------
 Function Update-Infrastructure() {
   If ($SkipInfra) { Return }
   Update-Submodule -Pattern '^PortableApps.com.*'
@@ -155,4 +166,5 @@ Function Update-Infrastructure() {
 # Main
 # -----------------------------------------------------------------------------
 Update-Applications
+Update-Templates
 Update-Infrastructure
