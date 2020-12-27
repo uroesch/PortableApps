@@ -29,6 +29,6 @@ function print_header() {
 
 
 cd ${BASE_DIR} &&
-  for repo_name in *Portable; do
+  for repo_name in *Portable *Template; do
    ( pull_all "${repo_name}" )
   done
