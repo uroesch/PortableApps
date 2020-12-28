@@ -11,7 +11,7 @@ Using module ".\PortableAppsCommon.psm1"
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-$Version    = "0.0.4-alpha"
+$Version    = "0.0.5-alpha"
 $Debug      = $True
 $RestUrl    = "https://api.github.com/repos/uroesch/{0}/releases" -f $AppName
 
@@ -27,7 +27,7 @@ Function Fetch-InstalledVersion() {
   }
   Catch {
     Debug error "Failed to parse version $AppInfoIni file"
-    exit 120
+    Return '0.0.0'
   }
 }
 
