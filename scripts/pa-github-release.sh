@@ -70,6 +70,9 @@ function find_installer() {
 
 function create_checksums() {
   local files="${@}"
+  for file in ${files}; do
+    sha256sum ${file} | awk '{print $1}' > ${file}.sha256
+  done 
   # create file for uploading
   sha256sum ${files} | \
     awk '{ print gensub("../", "", "g") }' \
@@ -96,6 +99,7 @@ function create_release() {
   assemble_release_message
   hub release create ${options} \
     -a $(find_installer) \
+    -a $(find_installer).sha256 \
     -a ${SUMS_FILE} \
     -F <( assemble_release_message ) \
     ${TAG}
