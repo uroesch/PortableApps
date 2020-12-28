@@ -22,6 +22,8 @@ declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 declare -g DISPLAY_PORT=:7777
 declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -g BUILD_METHOD=powershell
+declare -g NO_PR=false
+declare -g FORCE=
 declare -g TEMPLATE=false
 declare -g START_X=false
 declare -g NO_BUILD=false
@@ -74,6 +76,7 @@ function sync_repo() {
   fi
   rsync -av --exclude=${INCLUDES_DIR##*/} ${COMMONFILES_DIR}/./ .
   replace_includes
+  replace_placeholders ${dir}
   git add .
   git status
   if ! git commit -a -m "${MESSAGE}"; then
@@ -81,10 +84,26 @@ function sync_repo() {
     git branch -D sync/update-${TIMESTAMP}
   else
     [[ ${NO_BUILD} == false ]] && build_release
-    git push origin sync/update-${TIMESTAMP}
-    hub pull-request -m "${MESSAGE}"
+    git push ${FORCE:+--force} origin sync/update-${TIMESTAMP}
+    create_pull_request
     git checkout master
   fi
+}
+
+# -----------------------------------------------------------------------------
+
+function create_pull_request() {
+  [[ ${NO_PR} == true ]] && return 0
+  hub pull-request -m "${MESSAGE}"
+}
+
+# -----------------------------------------------------------------------------
+
+function replace_placeholders() {
+  local dir=${1}; shift;
+  local app_name=${dir##*/}
+  [[ ${app_name} =~ Template$ ]] && return 0
+  sed -i "s/{{ AppName }}/${app_name}/g" README.md
 }
 
 # -----------------------------------------------------------------------------
@@ -100,6 +119,7 @@ function replace_includes() {
         e cat '${file}'
       } 
     }" README.md 
+    
   done
 }
 
@@ -141,10 +161,12 @@ function usage() {
   Options:
     -h | --help       This message
     -d | --docker     Build with docker instead of powershell
+    -f | --force      Force the git push to the remote repository
     -m | --message    Set commit message for Git commit
                       Default: "${MESSAGE}"
     -B | --no-build   Do not build the installer package.
     -T | --template   Only sync with the template repository.
+    -P | --no-pr      Do not create a pull-request.
     -X | --start-x    Start a hidden X server for the build to go through.
 
 USAGE
@@ -157,10 +179,12 @@ function parse_options() {
   while [[ ${#} -gt 0 ]]; do
     case ${1} in
     -d|--docker)   BUILD_METHOD=docker;;
+    -f|--force)    FORCE=true;;
     -m|--message)  shift; MESSAGE="${1}";;
     -X|--start-x)  START_X=true;;
     -B|--no-build) NO_BUILD=true;;
     -T|--template) NO_BUILD=true; TEMPLATE=true;;
+    -P|--no-pr)    NO_PR=true;;
     -h|--help)    usage 0;;
     *Portable)    REPOS=( ${REPOS[@]:-} ${1} );;
     *)           usage 1;;
