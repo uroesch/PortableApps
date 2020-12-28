@@ -11,7 +11,7 @@ Using module ".\PortableAppsCommon.psm1"
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-$Version    = "0.0.5-alpha"
+$Version    = "0.0.6-alpha"
 $Debug      = $True
 $RestUrl    = "https://api.github.com/repos/uroesch/{0}/releases" -f $AppName
 
@@ -60,7 +60,7 @@ Function Fetch-InstallerLink() {
   Debug info "Fetching installer download URL '$RestUrl'"
   Try {
     (Fetch-LatestRelease).assets | ForEach-Object {
-      If ($_.name -Match "$AppName.*.paf.exe") {
+      If ($_.name -Match "$AppName.*.paf.exe$") {
         Debug info "Download link is $($_.browser_download_url)"
         Return $_.browser_download_url
       }
