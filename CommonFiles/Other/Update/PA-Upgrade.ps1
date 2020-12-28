@@ -11,7 +11,7 @@ Using module ".\PortableAppsCommon.psm1"
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-$Version    = "0.0.6-alpha"
+$Version    = "0.0.7-alpha"
 $Debug      = $True
 $RestUrl    = "https://api.github.com/repos/uroesch/{0}/releases" -f $AppName
 
@@ -50,7 +50,7 @@ Function Fetch-LatestRelease() {
     (Invoke-RestMethod -Uri $RestUrl)[0]
   }
   Catch {
-    Debug error "Failed to fetch latest release of $AppName"
+    Debug error "Failed to fetch latest release of '$AppName'"
     exit 122
   }
 }
@@ -67,7 +67,7 @@ Function Fetch-InstallerLink() {
     }
   }
   Catch {
-    Debug error "Failed to download and parse release information for $AppName"
+    Debug error "Failed to download and parse release information"
     Exit 123
   }
 }
@@ -83,7 +83,7 @@ Function Download-Release {
   }
 
   If (Test-Path $InstallerFile) {
-    Debug info "File '$InstallerFile' is already present; Skip download"
+    Debug info "File '$InstallerFile' is already present; Skipping"
     Return $InstallerFile
   }
 
@@ -91,7 +91,8 @@ Function Download-Release {
   Try {
     Invoke-WebRequest `
       -Uri $InstallerLink `
-      -OutFile $InstallerFile | Out-Null
+      -OutFile "$InstallerFile.part" | Out-Null
+    Move-Item "$InstallerFile.part" $InstallerFile
   }
   Catch {
     Debug error "Failed to download '$InstallerLink'"
