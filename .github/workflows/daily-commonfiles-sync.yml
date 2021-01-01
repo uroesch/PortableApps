@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: master
-        repo-token: ${{ secrets.PA_ACTION_TOKEN }}
+        token: ${{ secrets.PA_ACTION_TOKEN }}
         submodules: recursive
 
     - name: Setup git
@@ -47,4 +47,5 @@ jobs:
 
     - name: Update common files
       shell: bash
+      run: bash ./scripts/sync-common-files.sh --template
       run: bash ./scripts/sync-common-files.sh --docker
