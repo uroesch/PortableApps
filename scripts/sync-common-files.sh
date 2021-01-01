@@ -11,7 +11,7 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r VERSION=0.4.0
+declare -r VERSION=0.4.1
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
@@ -19,6 +19,7 @@ declare -r INCLUDES_DIR="${COMMONFILES_DIR}/_includes"
 declare -r TIMESTAMP=$(date +%F)
 declare -r LINE=$(printf "%0.1s" -{1..80})
 declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
+declare -g BRANCH=sync/update-${TIMESTAMP}
 declare -g DISPLAY_PORT=:7777
 declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -g BUILD_METHOD=powershell
@@ -70,9 +71,9 @@ function sync_repo() {
   git fetch --all
   git pull origin master
   if git branch | grep -q "sync/update-${TIMESTAMP}"; then
-    git checkout sync/update-${TIMESTAMP}
+    git checkout ${BRANCH}
   else
-    git checkout -b sync/update-${TIMESTAMP}
+    git checkout -b ${BRANCH}
   fi
   rsync -av --exclude=${INCLUDES_DIR##*/} ${COMMONFILES_DIR}/./ .
   replace_includes
@@ -81,10 +82,10 @@ function sync_repo() {
   git status
   if ! git commit -a -m "${MESSAGE}"; then
     git checkout master
-    git branch -D sync/update-${TIMESTAMP}
+    git branch -D ${BRANCH}
   else
     [[ ${NO_BUILD} == false ]] && build_release
-    git push ${FORCE:+--force} origin sync/update-${TIMESTAMP}
+    git push ${FORCE:+--force} origin ${BRANCH}
     create_pull_request
     git checkout master
   fi
@@ -94,7 +95,7 @@ function sync_repo() {
 
 function create_pull_request() {
   [[ ${NO_PR} == true ]] && return 0
-  hub pull-request -m "${MESSAGE}"
+  hub pull-request -p -b ${BRANCH} -m "${MESSAGE}"
 }
 
 # -----------------------------------------------------------------------------
