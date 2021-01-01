@@ -50,7 +50,7 @@ function build_with_powershell() {
 # -----------------------------------------------------------------------------
 
 function build_with_docker() {
-  ${SCRIPT_DIR}/docker-build.sh --up-release
+  ${SCRIPT_DIR}/docker-build.sh
 }
 
 # -----------------------------------------------------------------------------
