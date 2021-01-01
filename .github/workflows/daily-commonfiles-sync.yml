@@ -42,7 +42,7 @@ jobs:
       shell: bash
       env:
         token: ${{ secrets.PA_ACTION_TOKEN }}
-      run: [[ -f ~/.config/hub ]] && cat ~/.config/hub
+      run: '[[ -f ~/.config/hub ]] && cat ~/.config/hub'
 
     - name: Update common files
       shell: bash
