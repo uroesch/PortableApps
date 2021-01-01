@@ -44,6 +44,6 @@ jobs:
          GITHUB_TOKEN: ${{ secrets.PA_ACTION_TOKEN }}
          GITHUB_USER: ${{ github.actor }}
       run: |2+
-        git config --global url."https://${GITHUB_USER}@github.com:".insteadOf "https://github.com/"
+        git config --global url."https://${GITHUB_USER}@github.com/".insteadOf "https://github.com/"
         bash ./scripts/sync-common-files.sh --template
         bash -x ./scripts/sync-common-files.sh --docker
