@@ -1,1 +1,3 @@
 *.exe
+*.exe.sha256
+*.exe.sha512
