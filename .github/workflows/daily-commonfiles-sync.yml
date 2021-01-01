@@ -29,7 +29,6 @@ jobs:
       run: |2+
         git config --global user.name "Urs Roesch"
         git config --global user.email "github@bun.ch"
-        git config --global credential.helper 'cache --timeout=7200'
         git config --global pull.rebase true
 
     - name: Checkout repository
@@ -39,6 +38,9 @@ jobs:
         token: ${{ secrets.PA_ACTION_TOKEN }}
         submodules: recursive
 
+    - name: Dump hub config
+      shell: bash
+      run: cat ~/.config/hub
 
     - name: Update common files
       shell: bash
