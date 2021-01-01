@@ -24,6 +24,14 @@ jobs:
         - ubuntu-latest
 
     steps:
+    - name: Setup git
+      shell: bash
+      run: |2+
+        git config --global user.name "Urs Roesch"
+        git config --global user.email "github@bun.ch"
+        git config --global credential.helper 'cache --timeout=7200'
+        git config --global pull.rebase true
+
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
@@ -31,13 +39,6 @@ jobs:
         token: ${{ secrets.PA_ACTION_TOKEN }}
         submodules: recursive
 
-    - name: Setup git
-      shell: bash
-      run: |2+
-        set -x
-        git config --global user.name "Urs Roesch"
-        git config --global user.email "github@bun.ch"
-        git config --global pull.rebase true
 
     - name: Update common files
       shell: bash
