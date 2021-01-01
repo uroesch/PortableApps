@@ -45,4 +45,4 @@ jobs:
          GITHUB_USER: ${{ github.actor }}
       run: |2+
         bash ./scripts/sync-common-files.sh --template
-        bash ./scripts/sync-common-files.sh --docker
+        bash -x ./scripts/sync-common-files.sh --docker
