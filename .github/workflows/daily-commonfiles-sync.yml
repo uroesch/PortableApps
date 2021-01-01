@@ -37,7 +37,9 @@ jobs:
 #        git config --global user.email "github@bun.ch"
 #        git config --global pull.rebase true
 
-     - name: Show remote
+    - name: Show remote
+      shell: bash
+      run: |2+
         git config --get-regex 'remote\..*'
 
     - name: Update common files
