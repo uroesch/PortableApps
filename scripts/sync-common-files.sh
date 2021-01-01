@@ -84,8 +84,10 @@ function sync_repo() {
     git branch -D sync/update-${TIMESTAMP}
   else
     [[ ${NO_BUILD} == false ]] && build_release
+    set -x 
     git push ${FORCE:+--force} origin sync/update-${TIMESTAMP}
     create_pull_request
+    set +x
     git checkout master
   fi
 }
