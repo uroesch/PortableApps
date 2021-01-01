@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Sync CommonFiles daily
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.1.0
+# Version: 0.2.0
 # -----------------------------------------------------------------------------
 name: daily-commonfiles-sync
 
@@ -23,19 +23,20 @@ jobs:
         os:
         - ubuntu-latest
 
+  steps:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
         ref: master
         submodules: recursive
 
-#    - name: Setup git
-#      shell: bash
-#      run: |2+
-#        set -x
-#        git config --global user.name "Urs Roesch"
-#        git config --global user.email "github@bun.ch"
-#        git config --global pull.rebase true
+    - name: Setup git
+      shell: bash
+      run: |2+
+        set -x
+        git config --global user.name "Urs Roesch"
+        git config --global user.email "github@bun.ch"
+        git config --global pull.rebase true
 
     - name: Show remote
       shell: bash
