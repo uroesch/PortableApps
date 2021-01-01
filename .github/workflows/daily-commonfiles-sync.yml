@@ -40,7 +40,9 @@ jobs:
 
     - name: Dump hub config
       shell: bash
-      run: cat ~/.config/hub
+      env:
+        token: ${{ secrets.PA_ACTION_TOKEN }}
+      run: [[ -f ~/.config/hub ]] && cat ~/.config/hub
 
     - name: Update common files
       shell: bash
