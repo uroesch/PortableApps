@@ -30,6 +30,7 @@ jobs:
         git config --global user.name "Urs Roesch"
         git config --global user.email "github@bun.ch"
         git config --global pull.rebase true
+        git config --global url."git@github.com:".insteadOf "https://github.com/"
 
     - name: Checkout repository
       uses: actions/checkout@v2
