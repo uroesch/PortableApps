@@ -28,6 +28,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: master
+        repo-token: ${{ secrets.PA_ACTION_TOKEN }}
         submodules: recursive
 
     - name: Setup git
@@ -42,6 +43,7 @@ jobs:
       shell: bash
       run: |2+
         git config --get-regex 'remote\..*'
+        grep url .gitmodules 
 
     - name: Update common files
       shell: bash
