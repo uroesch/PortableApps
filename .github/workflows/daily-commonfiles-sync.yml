@@ -38,14 +38,11 @@ jobs:
         token: ${{ secrets.PA_ACTION_TOKEN }}
         submodules: recursive
 
-    - name: Dump hub config
-      shell: bash
-      env:
-        token: ${{ secrets.PA_ACTION_TOKEN }}
-      run: '[[ -f ~/.config/hub ]] && cat ~/.config/hub'
-
     - name: Update common files
       shell: bash
+      env:
+         GITHUB_TOKEN: ${{ secrets.PA_ACTION_TOKEN }}
+         GITHUB_USER: ${{ github.actor }}
       run: |2+
         bash ./scripts/sync-common-files.sh --template
         bash ./scripts/sync-common-files.sh --docker
