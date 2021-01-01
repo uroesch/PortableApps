@@ -11,7 +11,7 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r VERSION=0.4.1
+declare -r VERSION=0.4.2
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
@@ -95,7 +95,7 @@ function sync_repo() {
 
 function create_pull_request() {
   [[ ${NO_PR} == true ]] && return 0
-  hub pull-request -p -b ${BRANCH} -m "${MESSAGE}"
+  hub pull-request -p -m "${MESSAGE}"
 }
 
 # -----------------------------------------------------------------------------
