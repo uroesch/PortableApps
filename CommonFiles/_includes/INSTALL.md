@@ -1,5 +1,11 @@
 ## Installation
 
+### Download
+
+Since this is not an official PortableApp the PortableApps installer must
+be download first. Navigate to https://github.com/uroesch/{{ AppName }}/releases
+for a selection of releases.
+
 ### Install via the PortableApps.com Platform
 
 After downloading the `.paf.exe` installer navigate to your PortableApps.com Platform
