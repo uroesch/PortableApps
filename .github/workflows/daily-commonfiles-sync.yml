@@ -37,6 +37,8 @@ jobs:
       with:
         ref: master
         token: ${{ secrets.PA_ACTION_TOKEN }}
+        ssh-key: |2+
+          ${{ secrets.PA_SYNC_KEY }}
         submodules: recursive
 
     - name: Update common files
