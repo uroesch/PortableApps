@@ -39,13 +39,8 @@ jobs:
         git config --global user.email "github@bun.ch"
         git config --global pull.rebase true
 
-    - name: Show remote
-      shell: bash
-      run: |2+
-        git config --get-regex 'remote\..*'
-        grep url .gitmodules 
-
     - name: Update common files
       shell: bash
-      run: bash ./scripts/sync-common-files.sh --template
-      run: bash ./scripts/sync-common-files.sh --docker
+      run: |2+
+        bash ./scripts/sync-common-files.sh --template
+        bash ./scripts/sync-common-files.sh --docker
