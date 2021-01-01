@@ -30,15 +30,12 @@ jobs:
         git config --global user.name "Urs Roesch"
         git config --global user.email "github@bun.ch"
         git config --global pull.rebase true
-        git config --global url."git@github.com:".insteadOf "https://github.com/"
 
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
         ref: master
         token: ${{ secrets.PA_ACTION_TOKEN }}
-        ssh-key: |2+
-          ${{ secrets.PA_SYNC_KEY }}
         submodules: recursive
 
     - name: Update common files
@@ -47,5 +44,6 @@ jobs:
          GITHUB_TOKEN: ${{ secrets.PA_ACTION_TOKEN }}
          GITHUB_USER: ${{ github.actor }}
       run: |2+
+        git config --global url."https://${GITHUB_USER}@github.com:".insteadOf "https://github.com/"
         bash ./scripts/sync-common-files.sh --template
         bash -x ./scripts/sync-common-files.sh --docker
