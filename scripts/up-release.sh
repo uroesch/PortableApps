@@ -18,6 +18,7 @@ declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 declare -g MESSAGE=
 declare -g ITERATION=
 declare -g BUILD_METHOD=powershell
+declare -g PRE_RELEASE=
 declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ { print $2 }' ${UPDATE_INI})
 declare -g NEW_VERSION=
 declare -g OLD_PACKAGE=
@@ -44,6 +45,7 @@ function usage() {
     -n | --new <version>     New version string (mandatory)
     -c | --checksum <sha256> Provide the checksum for the download
     -m | --message <messag>  New version string (optional)
+    -p | --pre-release       Submit as pre-release to github
 
 USAGE
   exit ${exit_code}
@@ -52,14 +54,15 @@ USAGE
 function parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -d|--docker)    BUILD_METHOD=docker;;
-    -i|--iteration) shift; ITERATION=${1};;
-    -o|--old)       shift; OLD_VERSION=${1};;
-    -n|--new)       shift; NEW_VERSION=${1};;
-    -m|--message)   shift; MESSAGE=${1};;
-    -c|--checksum)  shift; CHECKSUM=${1};;
-    -h|--help)      usage 0;;
-    *)              usage 1;;
+    -d|--docker)      BUILD_METHOD=docker;;
+    -i|--iteration)   shift; ITERATION=${1};;
+    -o|--old)         shift; OLD_VERSION=${1};;
+    -n|--new)         shift; NEW_VERSION=${1};;
+    -m|--message)     shift; MESSAGE=${1};;
+    -c|--checksum)    shift; CHECKSUM=${1};;
+    -p|--pre-release) PRE_RELASE=true;;
+    -h|--help)        usage 0;;
+    *)                usage 1;;
     esac
     shift
   done
@@ -208,6 +211,7 @@ function wait_for_ci_status() {
 
 function create_release() {
   ${SCRIPT_DIR}/pa-github-release.sh \
+    ${PRE_RELEASE:+--pre-release} \
     --tag ${NEW_RELEASE} \
     --message "$(message)"
 }
