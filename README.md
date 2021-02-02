@@ -13,8 +13,7 @@ updating.
 
 ### Docker
 
-This is a fairly new way to build on Linux but already the
-recommended build procedure.
+This is the prefered and easiest way to build on Linux. 
 
 The dependencies such as `wine` and `powershell` are all contained 
 in the docker container so other than the omnipresent `bash` shell
