@@ -21,7 +21,7 @@
 .PARAMETER CleanDownloads
   Also cleanup the Download directory under each application
   directory e.g '*Portable/Downloads/*'
-  
+
 #>
 
 Param(
@@ -63,6 +63,8 @@ Function Remove-AppInstallers() {
   If ($SkipApps) { Return }
   $Message = "Removing {0} PortableApps installers from '{1}'"
   Remove-Installers -Filter "*Portable_*.paf.exe" -Message $Message
+  $Message = "Removing {0} PortableApps installers checksum from '{1}'"
+  Remove-Installers -Filter "*Portable_*.paf.exe.sha256" -Message $Message
 }
 
 Function Remove-InfraInstallers() {
@@ -74,7 +76,7 @@ Function Remove-InfraInstallers() {
 Function Clean-DownloadDirectory() {
   If (!($CleanDownloads)) { Return }
   $Files = Get-Childitem -Path "$InstallersDir" -Recurse -File | `
-    ForEach-Object { If ($_.Directory -Match "Download$") { $_.FullName } }  
+    ForEach-Object { If ($_.Directory -Match "Download$") { $_.FullName } }
   $Message = "Removing {0} Files from '{1}/*Portable/Download' directories"
   Remove-Files -Message $Message -Files $Files
 }
