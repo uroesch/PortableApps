@@ -44,7 +44,7 @@ function parse_options() {
     case ${1} in
     -t|--tag)         shift; TAG=${1};;
     -m|--message)     shift; MESSAGE=${1};;
-    -p|--pre-release) PRE_RELASE=true;;
+    -p|--pre-release) PRE_RELEASE=true;;
     -h|--help)        usage 0;;
     *)                usage 1;;
     esac
