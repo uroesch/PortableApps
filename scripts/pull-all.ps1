@@ -8,7 +8,7 @@
   A simple script to loop through all git submodules definded
   by pattern. There are two Modes App and Infra. App updates
   the Application portion while Infra does take care of the
-  submodules requires for the build. 
+  submodules requires for the build.
 
 .PARAMETER SkipApps
   Skip update of the App submodules.
@@ -19,11 +19,11 @@
   Template submodules ending with 'Template'.
 
 .PARAMETER SkipInfra
-  Skip the Infra submodules 
+  Skip the Infra submodules
   Infra submodules starting with 'PortableApps.com'.
 
 .PARAMETER Debug
-  Switch on Debugging 
+  Switch on Debugging
 #>
 
 Param(
@@ -37,7 +37,7 @@ Param(
 # Globals
 # -----------------------------------------------------------------------------
 $BaseDir = Resolve-Path -Path "$PSScriptRoot/.."
-$GitRefs = @{ 
+$GitRefs = @{
   'PortableApps.comLauncher' = 'patched'
 }
 
@@ -67,10 +67,10 @@ Function Logger() {
 # -----------------------------------------------------------------------------
 Function Run() {
   Param(
-    [String] $Command 
+    [String] $Command
   )
   Logger info "Running command -> '$Command'"
-  Invoke-Expression $Command 
+  Invoke-Expression $Command
 }
 
 # -----------------------------------------------------------------------------
@@ -92,7 +92,7 @@ Function Pull-Repository() {
 
 # -----------------------------------------------------------------------------
 Function Sync-Repository() {
-  Param( 
+  Param(
     [String] $Submodule,
     [String] $Ref = 'master'
   )
@@ -113,7 +113,7 @@ Function Sync-Repository() {
 
 # -----------------------------------------------------------------------------
 Function Print-Header() {
-   Param( 
+   Param(
      [String] $Name
    )
    ""
@@ -135,7 +135,7 @@ Function Update-Submodule() {
           Default { $_ }
         }
         Sync-Repository -Submodule $_.Name -Ref $Ref
-      } 
+      }
     }
   }
   Catch {

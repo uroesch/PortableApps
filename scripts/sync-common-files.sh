@@ -109,7 +109,7 @@ function replace_placeholders() {
 
 # -----------------------------------------------------------------------------
 
-function replace_includes() { 
+function replace_includes() {
   for file in $(find ${INCLUDES_DIR} -name "*.md"); do
     local basename=${file##*/}
     local start="<!-- Start include ${basename} -->"
@@ -118,9 +118,9 @@ function replace_includes() {
       /${start}/!{
         /${end}/!d;
         e cat '${file}'
-      } 
-    }" README.md 
-    
+      }
+    }" README.md
+
   done
 }
 

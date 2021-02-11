@@ -95,7 +95,7 @@ Function Install-Dir() {
 
 # -----------------------------------------------------------------------------
 
-Function Check-Version() { 
+Function Check-Version() {
   Param(
     [String] $Name,
     [String] $Installer
@@ -108,7 +108,7 @@ Function Check-Version() {
     Return $Installer -match $Version
   }
   Catch {
-    Return $False 
+    Return $False
   }
 }
 

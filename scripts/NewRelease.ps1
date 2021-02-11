@@ -27,11 +27,11 @@ declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 function usage() {
   local exit_code=${1:-1}; shift
   cat <<USAGE
-  
+
   Usage: ${SCRIPT} <options>
-  
+
   Options:
-    -h | --help          This message  
+    -h | --help          This message
     -o | --old <version> Old version string (mandatory)
     -n | --new <version> New version string (mandatory)
 
@@ -39,19 +39,19 @@ USAGE
   exit ${exit_code}
 }
 
-function parse_options() { 
+function parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
     -o|--old)  shift; OLD_VERSION=${1};;
     -n|--new)  shift; NEW_VERSION=${1};;
     -h|--help) usage 0;;
-    *)         usage 1;; 
+    *)         usage 1;;
     esac
     shift
   done
 }
 
-function verify_options() { 
+function verify_options() {
   for option in NEW_VERSION OLD_VERSION; do
     if [[ -z ${!option} ]]; then
       printf "\nMissing option --old or --new\n"
@@ -78,15 +78,15 @@ function create_new_branch() {
   local checkout_option=""
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
     checkout_option="-b"
-  fi 
-  git checkout ${checkout_option} release/${NEW_RELEASE} 
+  fi
+  git checkout ${checkout_option} release/${NEW_RELEASE}
 }
 
 function create_release_tag() {
   # clean tag if already exits
-  if git tag | grep ${NEW_RELEASE}; then 
-    git tag --delete ${NEW_RELEASE} 
-  fi 
+  if git tag | grep ${NEW_RELEASE}; then
+    git tag --delete ${NEW_RELEASE}
+  fi
   git tag ${NEW_RELEASE}
 }
 
@@ -110,9 +110,9 @@ function create_new_release() {
     -e "s/${OLD_VERSION//+/}/${NEW_VERSION//+}/g" \
     ${UPDATE_INI}
   powershell Other/Update/Update.ps1
-  commit_release 
+  commit_release
   create_release_tag
-  push_release 
+  push_release
 }
 
 function create_pull_request() {
@@ -145,7 +145,7 @@ function create_checksums() {
 }
 
 
-function assemble_release_message() { 
+function assemble_release_message() {
   local cell_width=64
   local line=$(eval printf "%0.1s" -{1..${cell_width}})
   local table_format="| %-${cell_width}s | %-${cell_width}s |\n"
