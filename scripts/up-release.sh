@@ -179,6 +179,7 @@ function create_new_release() {
     -e '/^Upstream/!'"s/${old_version}/${NEW_VERSION}/g" \
     -e '/^Upstream/!'"s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
     -e '/^Upstream/!'"s/${old_version//+/}/${NEW_VERSION//+}/g" \
+    -e '/^Upstream/!'"s/${old_version//+-/+}/${NEW_VERSION//+-/+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     ${UPDATE_INI}
   update_checksum
