@@ -65,7 +65,7 @@ function message() {
 }
 
 function find_installer() {
-  local release=${TAG:1:1000}
+  local release=${TAG/^v/}
   find ../ \
     -type f \
     -name "${PACKAGE_NAME}_${release//[+]/*}*.paf.exe"
