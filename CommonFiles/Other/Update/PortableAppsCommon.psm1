@@ -2,7 +2,7 @@
 # Description: Common classes and functions for portable apps powershell
 #   scripts
 # Author: Urs Roesch <github@bun.ch>
-# Version: 0.9.0
+# Version: 0.9.1
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -208,11 +208,12 @@ Function Download-Checksum() {
           # Multiline file with file name prefix
           Return $Line -replace "$File\s+($Pattern)", "`$1"
         }
-        "^$Pattern\s+$File$" {
+        "^$Pattern\s+\*?$File$" {
           # Multiline file with file name suffix
-          Return $Line -replace "($Pattern)\s+$File", "`$1"
+          Return $Line -replace "^($Pattern)\s+\*?$File", "`$1"
         }
         default {
+          Debug debug "No match in line '$File'"
           Debug debug "No match in line '$Line'"
         }
       }
