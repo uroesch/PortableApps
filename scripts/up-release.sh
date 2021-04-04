@@ -10,10 +10,12 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
+declare -r VERSION=0.4.0
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -r UPDATE_INI=App/AppInfo/update.ini
+declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
 declare -g MESSAGE=
 declare -g ITERATION=
@@ -138,7 +140,7 @@ function push_release() {
 }
 
 function build_with_powershell() {
-  pwsh \
+  ${POWERSHELL} \
     -ExecutionPolicy ByPass \
     -File Other/Update/Update.ps1 \
     ${CHECKSUM:--UpdateChecksums}
