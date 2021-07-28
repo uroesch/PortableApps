@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.4.0
+declare -r VERSION=0.5.0
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
@@ -28,6 +28,7 @@ declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
 declare -g CHECKSUM=
+declare -g STAGE=release
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -48,6 +49,9 @@ function usage() {
     -c | --checksum <sha256> Provide the checksum for the download
     -m | --message <messag>  New version string (optional)
     -p | --pre-release       Submit as pre-release to github
+    -s | --stage <stage>     Only complete up to a certain stage.
+                             Values are patch, build, pr, release
+                             Default: ${STAGE}
 
 USAGE
   exit ${exit_code}
@@ -62,6 +66,7 @@ function parse_options() {
     -n|--new)         shift; NEW_VERSION=${1};;
     -m|--message)     shift; MESSAGE=${1};;
     -c|--checksum)    shift; CHECKSUM=${1};;
+    -s|--stage)       shift; STAGE=${1};;
     -p|--pre-release) PRE_RELASE=true;;
     -h|--help)        usage 0;;
     *)                usage 1;;
@@ -103,7 +108,7 @@ function sync_master() {
   git pull origin master
 }
 
-function create_new_branch() {
+function patch::create_branch() {
   local checkout_option=""
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
     checkout_option="-b"
@@ -174,7 +179,7 @@ function update_upstream() {
     ${UPDATE_INI}
 }
 
-function create_new_release() {
+function patch::create_release() {
   local old_version=$(escape_regex "${OLD_VERSION}")
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
@@ -185,11 +190,13 @@ function create_new_release() {
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     ${UPDATE_INI}
   update_checksum
+}
+
+function build::release() {
   build_release
-  update_upstream "${old_version}"
+  update_upstream "$(escape_regex "${OLD_VERSION}")"
   commit_release
   create_release_tag
-  push_release
 }
 
 function update_checksum() {
@@ -199,11 +206,12 @@ function update_checksum() {
     ${UPDATE_INI}
 }
 
-function create_pull_request() {
+function pr::create_pull_request() {
+  push_release
   hub pull-request -m "$(message)"
 }
 
-function wait_for_ci_status() {
+function pr::wait_for_ci_status() {
   for count in {1..20}; do
     hub ci-status | grep -q success && return 0
     sleep 60
@@ -212,22 +220,36 @@ function wait_for_ci_status() {
   return 1
 }
 
-function create_release() {
+function release::to_github() {
   ${SCRIPT_DIR}/pa-github-release.sh \
     ${PRE_RELEASE:+--pre-release} \
     --tag ${NEW_RELEASE} \
     --message "$(message)"
 }
 
+function run_stages() {
+  local -- stage=${1}; shift;
+  if [[ ! ${stage} =~ patch|build|pr|release ]]; then
+    echo "Stage ${stage} unknown to human kind!" 1>&2
+  fi
+  patch::create_branch
+  patch::create_release
+  [[ ${stage} == patch ]] && return 0
+  build::release
+  [[ ${stage} == build ]] && return 0
+  pr::create_pull_request
+  pr::wait_for_ci_status
+  [[ ${stage} == pr ]] && return 0
+  release::to_github
+}
+
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
+# patch, build, pr, release
+
 parse_options "${@}"
 verify_options
 sync_master
 define_release_variables
-create_new_branch
-create_new_release
-create_pull_request
-wait_for_ci_status
-create_release
+run_stages ${STAGE}
