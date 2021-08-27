@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Build all portable apps for confirmation
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.1.0
+# Version: 0.2.0
 # -----------------------------------------------------------------------------
 name: build-all-packages
 
@@ -26,48 +26,12 @@ jobs:
       DISPLAY: ':7777'
 
     steps:
-    - name: Cache apt directory cache
-      if: runner.os == 'Linux'
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-apt-pkgs
-      with:
-        path: /var/cache/apt/archive
-        key: build-package-${{ env.cache-name }}-${{ hashFiles('*deb') }}
-        restore-keys: |
-          build-package-${{ env.cache-name }}-
-
-    - name: Install Wine ~ hick ~
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |2+
-        case $(lsb_release --short --release) in
-        20.04)
-          sudo apt-get -y install wine
-          ;;
-        18.04)
-          sudo dpkg --add-architecture i386 &&
-          sudo apt-get update &&
-          sudo apt-get -y install wine32
-          ;;
-        esac
-
-    - name: Install Virtual Frame Buffer
-      if: runner.os == 'Linux'
-      shell: bash
-      run: sudo apt-get -y install xvfb
-
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Start Virtual Frame Buffer
-      if: runner.os == 'Linux'
-      shell: bash
-      run: Xvfb ${DISPLAY} -ac &
-
     - name: Run build script
       shell: bash
-      run: bash scripts/build-all.sh
+      run: bash scripts/build-all.sh --docker
       timeout-minutes: 90
