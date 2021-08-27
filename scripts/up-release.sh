@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.5.0
+declare -r VERSION=0.5.1
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
@@ -23,6 +23,7 @@ declare -g BUILD_METHOD=powershell
 declare -g PRE_RELEASE=
 declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ { print $2 }' ${UPDATE_INI})
 declare -g NEW_VERSION=
+declare -g NEW_RELEASE=
 declare -g OLD_PACKAGE=
 declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
@@ -40,18 +41,19 @@ function usage() {
   Usage: ${SCRIPT} <options>
 
   Options:
-    -h | --help              This message
-    -d | --docker            Build with docker instead of powershell
-    -i | --iteration <N>     Override the iteration
-    -o | --old <version>     Old version string (optional)
-                             Default: ${OLD_VERSION}
-    -n | --new <version>     New version string (mandatory)
-    -c | --checksum <sha256> Provide the checksum for the download
-    -m | --message <messag>  New version string (optional)
-    -p | --pre-release       Submit as pre-release to github
-    -s | --stage <stage>     Only complete up to a certain stage.
-                             Values are patch, build, pr, release
-                             Default: ${STAGE}
+    -h | --help                This message
+    -d | --docker              Build with docker instead of powershell
+    -i | --iteration <N>       Override the iteration
+    -o | --old <version>       Old version string (optional)
+                               Default: ${OLD_VERSION}
+    -n | --new <version>       New version string (mandatory)
+    -r | --release-name <name> New version string (mandatory)
+    -c | --checksum <sha256>   Provide the checksum for the download
+    -m | --message <messag>    New version string (optional)
+    -p | --pre-release         Submit as pre-release to github
+    -s | --stage <stage>       Only complete up to a certain stage.
+                               Values are patch, build, pr, release
+                               Default: ${STAGE}
 
 USAGE
   exit ${exit_code}
@@ -60,16 +62,17 @@ USAGE
 function parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -d|--docker)      BUILD_METHOD=docker;;
-    -i|--iteration)   shift; ITERATION=${1};;
-    -o|--old)         shift; OLD_VERSION=${1};;
-    -n|--new)         shift; NEW_VERSION=${1};;
-    -m|--message)     shift; MESSAGE=${1};;
-    -c|--checksum)    shift; CHECKSUM=${1};;
-    -s|--stage)       shift; STAGE=${1};;
-    -p|--pre-release) PRE_RELASE=true;;
-    -h|--help)        usage 0;;
-    *)                usage 1;;
+    -d|--docker)       BUILD_METHOD=docker;;
+    -i|--iteration)    shift; ITERATION=${1};;
+    -o|--old)          shift; OLD_VERSION=${1};;
+    -n|--new)          shift; NEW_VERSION=${1};;
+    -r|--release-name) shift; NEW_RELEASE=${1};;
+    -m|--message)      shift; MESSAGE=${1};;
+    -c|--checksum)     shift; CHECKSUM=${1};;
+    -s|--stage)        shift; STAGE=${1};;
+    -p|--pre-release)  PRE_RELASE=true;;
+    -h|--help)         usage 0;;
+    *)                 usage 1;;
     esac
     shift
   done
@@ -95,7 +98,8 @@ function define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
-  NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
+  [[ -z ${NEW_RELEASE} ]] && \
+    NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
     echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
     exit 255
@@ -173,9 +177,7 @@ function escape_regex() {
 function update_upstream() {
   local old_version=${1}
   sed -r -i \
-    -e "/^Upstream/s/${old_version}/${NEW_VERSION}/g" \
-    -e "/^Upstream/s/${old_version%%-*}/${NEW_VERSION%%-*}/g" \
-    -e "/^Upstream/s/${old_version//+/}/${NEW_VERSION//+}/g" \
+    -e "/^Upstream/s/=.*/= ${NEW_VERSION}/g" \
     ${UPDATE_INI}
 }
 
@@ -188,6 +190,7 @@ function patch::create_release() {
     -e '/^Upstream/!'"s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
     -e '/^Upstream/!'"s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
+    -e '/^Display/'"s/=.*/${NEW_RELEASE/#v/}/g" \
     ${UPDATE_INI}
   update_checksum
 }
@@ -253,3 +256,5 @@ verify_options
 sync_master
 define_release_variables
 run_stages ${STAGE}
+
+# vim: set shiftwidth=2 softtabstop=2 expandtab :
