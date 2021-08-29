@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.5.1
+declare -r VERSION=0.5.2
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
@@ -190,7 +190,7 @@ function patch::create_release() {
     -e '/^Upstream/!'"s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
     -e '/^Upstream/!'"s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
-    -e '/^Display/'"s/=.*/${NEW_RELEASE/#v/}/g" \
+    -e '/^Display/'"s/=.*/= ${NEW_RELEASE/#v/}/g" \
     ${UPDATE_INI}
   update_checksum
 }
