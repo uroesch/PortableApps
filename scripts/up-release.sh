@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.5.2
+declare -r VERSION=0.5.3
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
@@ -47,7 +47,7 @@ function usage() {
     -o | --old <version>       Old version string (optional)
                                Default: ${OLD_VERSION}
     -n | --new <version>       New version string (mandatory)
-    -r | --release-name <name> New version string (mandatory)
+    -r | --release-name <name> New PA release name
     -c | --checksum <sha256>   Provide the checksum for the download
     -m | --message <messag>    New version string (optional)
     -p | --pre-release         Submit as pre-release to github
