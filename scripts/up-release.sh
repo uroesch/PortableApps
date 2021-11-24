@@ -17,6 +17,7 @@ declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -r UPDATE_INI=App/AppInfo/update.ini
 declare -r POWERSHELL=$(which pwsh 2>/dev/null || which powershell 2>/dev/null)
 declare -r GIT_MESSAGE="Release %s\n\nSummary:\n  * Upstream release v%s\n"
+declare -g DEFAULT_BRANCH=
 declare -g MESSAGE=
 declare -g ITERATION=
 declare -g BUILD_METHOD=powershell
@@ -107,9 +108,16 @@ function define_release_variables() {
   format_package_version
 }
 
-function sync_master() {
-  git checkout master
-  git pull origin master
+function find_default_branch() {
+  # prefer master over main
+  local -a branches=( $(git branch | grep -oE "\<(master|main)\>" | sort -r) )
+  DEFAULT_BRANCH="${branches[0]}"
+}
+
+function sync_default_branch() {
+  find_default_branch
+  git checkout "${DEFAULT_BRANCH}"
+  git pull origin "${DEFAULT_BRANCH}"
 }
 
 function patch::create_branch() {
@@ -253,7 +261,7 @@ function run_stages() {
 
 parse_options "${@}"
 verify_options
-sync_master
+sync_default_branch
 define_release_variables
 run_stages ${STAGE}
 
