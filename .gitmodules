@@ -64,3 +64,6 @@
 [submodule "CmderPortable"]
 	path = CmderPortable
 	url = https://github.com/uroesch/CmderPortable.git
+[submodule "PuTTYPortable"]
+	path = PuTTYPortable
+	url = https://github.com/uroesch/PuTTYPortable.git
