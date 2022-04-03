@@ -10,7 +10,18 @@
   for PortableApps.
   Downloads and installs / update the packages PortableApps.comInstaller and
   PortableApps.comLauncher.
+
+.PARAMETER WithoutInstaller
+  Skip the update of the PortableApps.comInstaller.
+
+.PARAMETER WithoutLauncher
+  Skip the update of the PortableApps.comLauncher.
 #>
+
+Param(
+  [Switch] $WithoutInstaller,
+  [Switch] $WithoutLauncher
+)
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -108,6 +119,7 @@ Function Check-Version() {
     Return $Installer -match $Version
   }
   Catch {
+    Write-Host "Could not file $AppInfo; giving up"
     Return $False
   }
 }
@@ -141,8 +153,29 @@ Function Install-Package() {
   Start-Process 7z -ArgumentList $Arguments -NoNewWindow -Wait
 }
 
+Function Usage() {
+  Param(
+    [Boolean] $Help
+  )
+  If ($Help) {
+    Write-Host $Help
+    Get-Help
+    exit
+  }
+}
+
+Function Install-Launcher() {
+  If ($WithoutLauncher) { Return }
+  Install-Package -Name launcher
+}
+
+Function Install-Installer() {
+  If ($WithoutInstaller) { Return }
+  Install-Package -Name installer
+}
+
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-Install-Package -Name installer
-Install-Package -Name launcher
+Install-Installer
+Install-Launcher
