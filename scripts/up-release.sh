@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.5.4
+declare -r VERSION=0.5.6
 declare -r SCRIPT=${0##*/}
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
@@ -71,7 +71,7 @@ function parse_options() {
     -m|--message)      shift; MESSAGE=${1};;
     -c|--checksum)     shift; CHECKSUM=${1};;
     -s|--stage)        shift; STAGE=${1};;
-    -p|--pre-release)  PRE_RELASE=true;;
+    -p|--pre-release)  PRE_RELEASE=true;;
     -h|--help)         usage 0;;
     *)                 usage 1;;
     esac
@@ -101,7 +101,7 @@ function define_release_variables() {
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
   [[ -z ${NEW_RELEASE} ]] && \
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
-  [[ ${NEW_RELEASE:1} != v ]] && \
+  [[ ${NEW_RELEASE:0:1} != v ]] && \
     NEW_RELEASE=v${NEW_RELEASE}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
     echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
