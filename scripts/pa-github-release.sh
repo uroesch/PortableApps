@@ -12,6 +12,7 @@ trap cleanup EXIT
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
+declare -r VERSION=0.6.0
 declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -g TAG=$(git describe --abbrev=0 --tags)
 declare -g MESSAGE=
@@ -95,18 +96,14 @@ function assemble_release_message() {
 }
 
 function create_release() {
-  local options=""
-  case ${TAG} in
-  *beta*|*alpha*|*rc*) options="${options} -p";;
-  esac
+  [[ ${TAG} =~ (beta|alpha|rc)[0-9]* ]] && PRE_RELEASE=true
   assemble_release_message
   hub release create \
-     ${PRE_RELEASE:+-p} \
-     ${options} \
-    -a $(find_installer) \
-    -a $(find_installer).sha256 \
-    -a ${SUMS_FILE} \
-    -F <( assemble_release_message ) \
+     ${PRE_RELEASE:+--prerelease} \
+    --attach $(find_installer) \
+    --attach $(find_installer).sha256 \
+    --attach ${SUMS_FILE} \
+    --file <( assemble_release_message ) \
     ${TAG}
 }
 
