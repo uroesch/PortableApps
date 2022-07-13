@@ -84,6 +84,7 @@ Function Pull-Repository() {
   Run "git pull --rebase origin $Ref"
   Run 'git branch' | ForEach-Object {
     If ($_ -notmatch "$Ref|master") {
+      Logger info "Deleting branch '$_'"
       Run "git branch -d $_"
       Run "git push origin :$_"
     }
