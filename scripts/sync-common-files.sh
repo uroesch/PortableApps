@@ -11,7 +11,7 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r VERSION=0.4.2
+declare -r VERSION=0.5.0
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
@@ -29,6 +29,7 @@ declare -g TEMPLATE=false
 declare -g START_X=false
 declare -g NO_BUILD=false
 declare -a REPOS=()
+declare -a EXCLUDE=()
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -145,6 +146,7 @@ function sync_repos() {
     modules=$(ls -d *Portable)
   fi
   for repo_name in ${modules[@]}; do
+    [[ ${EXCLUDE[@]} =~ ${repo_name} ]] && continue || :
     print_header "${repo_name}"
     ( sync_repo "${repo_name}"; )
   done
@@ -157,18 +159,19 @@ function usage() {
   cat <<USAGE
 
   Usage:
-    ${SCRIPT} [-X] [-h] [directory [..]]
+    ${SCRIPT} [options] [directory [..]]
 
   Options:
-    -h | --help       This message
-    -d | --docker     Build with docker instead of powershell
-    -f | --force      Force the git push to the remote repository
-    -m | --message    Set commit message for Git commit
-                      Default: "${MESSAGE}"
-    -B | --no-build   Do not build the installer package.
-    -T | --template   Only sync with the template repository.
-    -P | --no-pr      Do not create a pull-request.
-    -X | --start-x    Start a hidden X server for the build to go through.
+    -h | --help           This message
+    -d | --docker         Build with docker instead of powershell
+    -f | --force          Force the git push to the remote repository
+    -m | --message        Set commit message for Git commit
+                          Default: "${MESSAGE}"
+    -B | --no-build       Do not build the installer package.
+    -T | --template       Only sync with the template repository.
+    -P | --no-pr          Do not create a pull-request.
+    -x | --exclude <name> Exclude from sync; can be used multiple times.
+    -X | --start-x        Start a hidden X server for the build to go through.
 
 USAGE
   exit ${exit_code}
@@ -177,7 +180,7 @@ USAGE
 # -----------------------------------------------------------------------------
 
 function parse_options() {
-  while [[ ${#} -gt 0 ]]; do
+  while (( ${#} > 0 )); do
     case ${1} in
     -d|--docker)   BUILD_METHOD=docker;;
     -f|--force)    FORCE=true;;
@@ -186,9 +189,10 @@ function parse_options() {
     -B|--no-build) NO_BUILD=true;;
     -T|--template) NO_BUILD=true; TEMPLATE=true;;
     -P|--no-pr)    NO_PR=true;;
-    -h|--help)    usage 0;;
-    *Portable)    REPOS=( ${REPOS[@]:-} ${1} );;
-    *)           usage 1;;
+    -x|--exclude)  shift; EXCLUDE=( "${1}" );;
+    -h|--help)     usage 0;;
+    *Portable)     REPOS+=( "${1}" );;
+    *)             usage 1;;
     esac
     shift
   done
