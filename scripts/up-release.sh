@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.6.0
+declare -r VERSION=0.6.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -150,7 +150,7 @@ function fetch_github_version() {
    --header "Accept: application/vnd.github+json" \
    https://api.github.com/repos/${GITHUB_PATH}/releases | \
    jq "[ .[].name ] | first" | \
-   sed -e 's/[^0-9\.-]//g'
+   sed -e 's/[^0-9+-.\(jp\)]//g'
 }
 
 function patch::create_branch() {
