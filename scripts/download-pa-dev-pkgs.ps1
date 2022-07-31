@@ -16,16 +16,25 @@
 
 .PARAMETER WithoutLauncher
   Skip the update of the PortableApps.comLauncher.
+
+.PARAMETER Version
+  Print Version and exit.
+#>
 #>
 
 Param(
   [Switch] $WithoutInstaller,
-  [Switch] $WithoutLauncher
+  [Switch] $WithoutLauncher,
+  [Switch] $Version
 )
 
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
+$ScriptName         = $MyInvocation.MyCommand.Name -replace '.ps1', ''
+$ScriptVersion      = '0.3.0'
+$ScriptAuthor       = 'Urs Roesch'
+$ScriptLicense      = 'GPL2'
 $PARoot             = Resolve-Path -Path "$PSScriptRoot/.."
 $BaseName           = "PortableApps.com"
 $Domain             = 'https://portableapps.com'
@@ -48,6 +57,15 @@ Filter Capitalize() {
 # -----------------------------------------------------------------------------
 # Functions
 # -----------------------------------------------------------------------------
+Function Print-Version() {
+  If (!$Version) { Return }
+  "`n{0} v{1}`nCopyright (c) {2}`nLicense - {3}`n" -f `
+    $ScriptName, $ScriptVersion, $ScriptAuthor, $ScriptLicense
+  Exit 0
+}
+
+# -----------------------------------------------------------------------------
+
 Function Extract-Link() {
   Param(
     [String] $Name,
@@ -90,7 +108,6 @@ Function Download-Binary() {
   }
 }
 
-
 # -----------------------------------------------------------------------------
 
 Function Install-Dir() {
@@ -116,7 +133,7 @@ Function Check-Version() {
     $AppInfo    = Join-Path $InstallDir 'App' 'AppInfo' 'appinfo.ini'
     $Version    = Select-String -Path $AppInfo -Pattern 'DisplayVersion' -Raw
     $Version    = ($Version -split "\s*=\s*")[1]
-    Return $Installer -match $Version
+    Return $Installer -match "^$Version$"
   }
   Catch {
     Write-Host "Could not file $AppInfo; giving up"
@@ -177,5 +194,6 @@ Function Install-Installer() {
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
+Print-Version
 Install-Installer
 Install-Launcher
