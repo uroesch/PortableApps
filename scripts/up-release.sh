@@ -10,8 +10,10 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.5.6
+declare -r VERSION=0.6.0
 declare -r SCRIPT=${0##*/}
+declare -r AUTHOR="Urs Roesch"
+declare -r LICENSE="GPL2"
 declare -r SCRIPT_DIR=$(readlink -f $(dirname ${0}))
 declare -r PACKAGE_NAME=$(basename $(pwd))
 declare -r UPDATE_INI=App/AppInfo/update.ini
@@ -22,7 +24,8 @@ declare -g MESSAGE=
 declare -g ITERATION=
 declare -g BUILD_METHOD=powershell
 declare -g PRE_RELEASE=
-declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ { print $2 }' ${UPDATE_INI})
+declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ {print $2}' ${UPDATE_INI})
+declare -g GITHUB_PATH=$(awk -F "[ =]*" '/GithubPath/ {print $2}' ${UPDATE_INI})
 declare -g NEW_VERSION=
 declare -g NEW_RELEASE=
 declare -g OLD_PACKAGE=
@@ -42,19 +45,23 @@ function usage() {
   Usage: ${SCRIPT} <options>
 
   Options:
-    -h | --help                This message
+    -c | --checksum <sha256>   Provide the checksum for the download
     -d | --docker              Build with docker instead of powershell
+    -g | --github-path <path>  Specify the github path of upstream project
+                               Default: ${GITHUB_PATH}
+    -h | --help                This message
     -i | --iteration <N>       Override the iteration
+    -m | --message <messag>    New version string (optional)
+    -n | --new <version>       New version string (mandatory)
     -o | --old <version>       Old version string (optional)
                                Default: ${OLD_VERSION}
-    -n | --new <version>       New version string (mandatory)
-    -r | --release-name <name> New PA release name
-    -c | --checksum <sha256>   Provide the checksum for the download
-    -m | --message <messag>    New version string (optional)
     -p | --pre-release         Submit as pre-release to github
+    -r | --release-name <name> New PA release name
     -s | --stage <stage>       Only complete up to a certain stage.
                                Values are patch, build, pr, release
                                Default: ${STAGE}
+    -V | --version             Print version, author and license and exit
+
 
 USAGE
   exit ${exit_code}
@@ -63,15 +70,17 @@ USAGE
 function parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -d|--docker)       BUILD_METHOD=docker;;
-    -i|--iteration)    shift; ITERATION=${1};;
-    -o|--old)          shift; OLD_VERSION=${1};;
-    -n|--new)          shift; NEW_VERSION=${1};;
-    -r|--release-name) shift; NEW_RELEASE=${1};;
-    -m|--message)      shift; MESSAGE=${1};;
+    -V|--version)      version;;
     -c|--checksum)     shift; CHECKSUM=${1};;
-    -s|--stage)        shift; STAGE=${1};;
+    -d|--docker)       BUILD_METHOD=docker;;
+    -g|--github-path)  shift; GITHUB_PATH=${1};;
+    -i|--iteration)    shift; ITERATION=${1};;
+    -m|--message)      shift; MESSAGE=${1};;
+    -n|--new)          shift; NEW_VERSION=${1};;
+    -o|--old)          shift; OLD_VERSION=${1};;
     -p|--pre-release)  PRE_RELEASE=true;;
+    -r|--release-name) shift; NEW_RELEASE=${1};;
+    -s|--stage)        shift; STAGE=${1};;
     -h|--help)         usage 0;;
     *)                 usage 1;;
     esac
@@ -79,8 +88,18 @@ function parse_options() {
   done
 }
 
+function version() {
+  printf "%s v%s\nCopyright (c) %s\nLicense - %s\n" \
+    "${SCRIPT%.*}" "${VERSION}" "${AUTHOR}" "${LICENSE}"
+  exit 0
+}
+
 function verify_options() {
-  for option in NEW_VERSION OLD_VERSION; do
+  if [[ -z ${GITHUB_PATH} && -z ${NEW_VERSION} ]]; then
+    printf "\nMissing value vor GithupPath or --new option\n"
+    usage 123
+  fi
+  for option in OLD_VERSION; do
     if [[ -z ${!option} ]]; then
       printf "\nMissing option --old or --new\n"
       usage 1
@@ -99,6 +118,8 @@ function define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
+  [[ -n ${GITHUB_PATH} ]] && \
+    NEW_VERSION=$(fetch_github_version)
   [[ -z ${NEW_RELEASE} ]] && \
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   [[ ${NEW_RELEASE:0:1} != v ]] && \
@@ -110,7 +131,6 @@ function define_release_variables() {
   format_package_version
 }
 
-
 function find_default_branch() {
   # prefer master over main
   local -a branches=( $(git branch | grep -oE "\<(master|main)\>" | sort -r) )
@@ -121,6 +141,16 @@ function sync_default_branch() {
   find_default_branch
   git checkout "${DEFAULT_BRANCH}"
   git pull origin "${DEFAULT_BRANCH}"
+}
+
+function fetch_github_version() {
+  [[ -z ${GITHUB_PATH} ]] && return 0
+  curl \
+   --silent \
+   --header "Accept: application/vnd.github+json" \
+   https://api.github.com/repos/${GITHUB_PATH}/releases | \
+   jq "[ .[].name ] | first" | \
+   sed -e 's/[^0-9\.-]//g'
 }
 
 function patch::create_branch() {
