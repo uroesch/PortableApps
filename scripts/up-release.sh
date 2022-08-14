@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.6.2
+declare -r VERSION=0.7.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -34,11 +34,33 @@ declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
 declare -g CHECKSUM=
 declare -g STAGE=release
+declare -a GITHUB_RELEASES=()
 
 # -----------------------------------------------------------------------------
-# Functions
+# Global functions
 # -----------------------------------------------------------------------------
-function usage() {
+function ::run_stages() {
+  local -- stage=${1}; shift;
+  if [[ ! ${stage} =~ prep|patch|build|pr|release ]]; then
+    echo "Stage ${stage} unknown to human kind!" 1>&2
+  fi
+  prep::github_releases
+  prep::sync_default_branch
+  prep::define_release_variables
+  prep::print_variables
+  [[ ${stage} == prep ]] && return 0
+  patch::create_branch
+  patch::create_release
+  [[ ${stage} == patch ]] && return 0
+  build::release
+  [[ ${stage} == build ]] && return 0
+  pr::create_pull_request
+  pr::wait_for_ci_status
+  [[ ${stage} == pr ]] && return 0
+  release::to_github
+}
+
+function ::usage() {
   local exit_code=${1:-1}; shift
   cat <<USAGE
 
@@ -58,7 +80,7 @@ function usage() {
     -p | --pre-release         Submit as pre-release to github
     -r | --release-name <name> New PA release name
     -s | --stage <stage>       Only complete up to a certain stage.
-                               Values are patch, build, pr, release
+                               Values are prep, patch, build, pr, release
                                Default: ${STAGE}
     -V | --version             Print version, author and license and exit
 
@@ -67,10 +89,10 @@ USAGE
   exit ${exit_code}
 }
 
-function parse_options() {
+function ::parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -V|--version)      version;;
+    -V|--version)      ::version;;
     -c|--checksum)     shift; CHECKSUM=${1};;
     -d|--docker)       BUILD_METHOD=docker;;
     -g|--github-path)  shift; GITHUB_PATH=${1};;
@@ -81,45 +103,116 @@ function parse_options() {
     -p|--pre-release)  PRE_RELEASE=true;;
     -r|--release-name) shift; NEW_RELEASE=${1};;
     -s|--stage)        shift; STAGE=${1};;
-    -h|--help)         usage 0;;
-    *)                 usage 1;;
+    -h|--help)         ::usage 0;;
+    *)                 ::usage 1;;
     esac
     shift
   done
 }
 
-function version() {
+function ::version() {
   printf "%s v%s\nCopyright (c) %s\nLicense - %s\n" \
     "${SCRIPT%.*}" "${VERSION}" "${AUTHOR}" "${LICENSE}"
   exit 0
 }
 
-function verify_options() {
+function ::verify_options() {
   if [[ -z ${GITHUB_PATH} && -z ${NEW_VERSION} ]]; then
     printf "\nMissing value vor GithupPath or --new option\n"
-    usage 123
+    ::usage 123
   fi
   for option in OLD_VERSION; do
     if [[ -z ${!option} ]]; then
       printf "\nMissing option --old or --new\n"
-      usage 1
+      ::usage 1
     fi
   done
 }
 
-function format_package_version() {
+function ::message() {
+  if [[ -n $MESSAGE ]]; then
+    echo "${MESSAGE}"
+  else
+    printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION}
+  fi
+}
+
+function ::build_with_powershell() {
+  ${POWERSHELL} \
+    -ExecutionPolicy ByPass \
+    -File Other/Update/Update.ps1 \
+    ${CHECKSUM:--UpdateChecksums}
+}
+
+function ::build_with_docker() {
+  ${SCRIPT_DIR}/docker-build.sh --up-release
+}
+
+function ::escape_regex() {
+  local string=${1}
+  string=${string//\./\\.}
+  string=${string//\+/\\+}
+  string=${string//\*/\\*}
+  echo ${string}
+}
+
+# -----------------------------------------------------------------------------
+# Github section
+# -----------------------------------------------------------------------------
+function github::fetch_releases() {
+  curl \
+    --silent \
+    --header "Accept: application/vnd.github+json" \
+    https://api.github.com/repos/${GITHUB_PATH}/releases
+}
+
+function github::releases() {
+  [[ -z ${GITHUB_PATH} ]] && return 0
+  (( ${#GITHUB_RELEASES[@]} == 0 )) && \
+    readarray GITHUB_RELEASES <<< $(github::fetch_releases)
+  echo "${GITHUB_RELEASES[@]}"
+}
+
+function github::release_name() {
+   github::releases | \
+   jq -r "[ .[].name ] | first"
+}
+
+function github::new_version() {
+   github::release_name | \
+   sed \
+     -e 's/[^0-9+-.\(jp\)]//g' \
+     -e 's/(\([0-9]*\))/.\1/g;'
+}
+
+function github::prerelease() {
+  local query='.[] | select(.name == "%s") | .prerelease'
+  github::releases | \
+    jq -r "$(printf "${query}" "$(github::release_name)")" | \
+    grep -i true || :
+}
+
+# -----------------------------------------------------------------------------
+# Preparation section
+# -----------------------------------------------------------------------------
+function prep::github_releases() {
+  # fetch the github releases json if GITHUB_PATH is set
+  github::releases >/dev/null
+}
+
+function prep::format_package_version() {
   local    package_version=${NEW_VERSION//[^0-9.-]/}
   local -a package_tokens=( ${package_version//[-.]/ } )
   [[ -n ${ITERATION} ]] && package_tokens[3]=${ITERATION}
   NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${package_tokens[@]})
 }
 
-function define_release_variables() {
+function prep::define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
   [[ -n ${GITHUB_PATH} ]] && \
-    NEW_VERSION=$(fetch_github_version)
+    NEW_VERSION=$(github::new_version)
   [[ -z ${NEW_RELEASE} ]] && \
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   [[ ${NEW_RELEASE:0:1} != v ]] && \
@@ -128,33 +221,34 @@ function define_release_variables() {
     echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
     exit 255
   fi
-  format_package_version
+  [[ -n ${GITHUB_PATH} && -z ${PRE_RELEASE} ]] && \
+    PRE_RELEASE=$(github::prerelease)
+  prep::format_package_version
+  NEW_DISPLAY=${NEW_RELEASE/#v/}
 }
 
-function find_default_branch() {
+function prep::find_default_branch() {
   # prefer master over main
   local -a branches=( $(git branch | grep -oE "\<(master|main)\>" | sort -r) )
   DEFAULT_BRANCH="${branches[0]}"
 }
 
-function sync_default_branch() {
-  find_default_branch
+function prep::sync_default_branch() {
+  prep::find_default_branch
   git checkout "${DEFAULT_BRANCH}"
   git pull origin "${DEFAULT_BRANCH}"
 }
 
-function fetch_github_version() {
-  [[ -z ${GITHUB_PATH} ]] && return 0
-  curl \
-   --silent \
-   --header "Accept: application/vnd.github+json" \
-   https://api.github.com/repos/${GITHUB_PATH}/releases | \
-   jq "[ .[].name ] | first" | \
-   sed \
-     -e 's/[^0-9+-.\(jp\)]//g' \
-     -e 's/(\([0-9]*\))/.\1/g;'
+function prep::print_variables() {
+  printf "\nVariables:\n"
+  for var in {NEW,OLD}_{RELEASE,VERSION,DISPLAY} PRE_RELEASE; do
+    printf " - %-12s '%s'\n" "${var}:" "${!var}"
+  done
 }
 
+# -----------------------------------------------------------------------------
+# Patch section
+# -----------------------------------------------------------------------------
 function patch::create_branch() {
   local checkout_option=""
   if ! git branch | grep -q "release/${NEW_RELEASE}"; then
@@ -163,69 +257,8 @@ function patch::create_branch() {
   git checkout ${checkout_option} release/${NEW_RELEASE}
 }
 
-function create_release_tag() {
-  # clean tag if already exits
-  if git tag | grep ${NEW_RELEASE}; then
-    git tag --delete ${NEW_RELEASE}
-  fi
-  git tag ${NEW_RELEASE}
-}
-
-function message() {
-  if [[ -n $MESSAGE ]]; then
-    echo "${MESSAGE}"
-  else
-    printf "${GIT_MESSAGE}" ${NEW_RELEASE} ${NEW_VERSION}
-  fi
-}
-
-function commit_release() {
-  git diff --exit-code || \
-    git commit \
-      --all \
-      --message "$(message)"
-}
-
-function push_release() {
-  git push origin release/${NEW_RELEASE}
-  git push origin ${NEW_RELEASE}
-}
-
-function build_with_powershell() {
-  ${POWERSHELL} \
-    -ExecutionPolicy ByPass \
-    -File Other/Update/Update.ps1 \
-    ${CHECKSUM:--UpdateChecksums}
-}
-
-function build_with_docker() {
-  ${SCRIPT_DIR}/docker-build.sh --up-release
-}
-
-function build_release() {
-  case ${BUILD_METHOD} in
-  docker) build_with_docker;;
-  *)      build_with_powershell;;
-  esac
-}
-
-function escape_regex() {
-  local string=${1}
-  string=${string//\./\\.}
-  string=${string//\+/\\+}
-  string=${string//\*/\\*}
-  echo ${string}
-}
-
-function update_upstream() {
-  local old_version=${1}
-  sed -r -i \
-    -e "/^Upstream/s/=.*/= ${NEW_VERSION}/g" \
-    ${UPDATE_INI}
-}
-
 function patch::create_release() {
-  local old_version=$(escape_regex "${OLD_VERSION}")
+  local old_version=$(::escape_regex "${OLD_VERSION}")
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
     -e '/^Upstream/!'"s/${old_version}\>/${NEW_VERSION}/g" \
@@ -233,30 +266,60 @@ function patch::create_release() {
     -e '/^Upstream/!'"s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
     -e '/^Upstream/!'"s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
     -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
-    -e '/^Display/'"s/=.*/= ${NEW_RELEASE/#v/}/g" \
+    -e '/^Display/'"s/=.*/= ${NEW_DISPLAY}/g" \
     ${UPDATE_INI}
-  update_checksum
+  patch::update_checksum
 }
 
-function build::release() {
-  build_release
-  update_upstream "$(escape_regex "${OLD_VERSION}")"
-  commit_release
-  create_release_tag
-}
-
-function update_checksum() {
+function patch::update_checksum() {
   [[ -z ${CHECKSUM} ]] && return 0
   sed -r -i \
     -e "/^Checksum1/s/(.*)::.*/\\1::${CHECKSUM}/" \
     ${UPDATE_INI}
 }
 
-function pr::create_pull_request() {
-  push_release
-  hub pull-request -m "$(message)"
+# -----------------------------------------------------------------------------
+# Build section
+# -----------------------------------------------------------------------------
+function build::build_release() {
+  case ${BUILD_METHOD} in
+  docker) ::build_with_docker;;
+  *)      ::build_with_powershell;;
+  esac
 }
 
+function build::update_upstream() {
+  local old_version=${1}
+  sed -r -i \
+    -e "/^Upstream/s/=.*/= ${NEW_VERSION}/g" \
+    ${UPDATE_INI}
+}
+
+function build::commit_release() {
+  git diff --exit-code || \
+    git commit \
+      --all \
+      --message "$(::message)"
+}
+
+function build::create_release_tag() {
+  # clean tag if already exits
+  if git tag | grep ${NEW_RELEASE}; then
+    git tag --delete ${NEW_RELEASE}
+  fi
+  git tag ${NEW_RELEASE}
+}
+
+function build::release() {
+  build::build_release
+  build::update_upstream "$(::escape_regex "${OLD_VERSION}")"
+  build::commit_release
+  build::create_release_tag
+}
+
+# -----------------------------------------------------------------------------
+# PR section
+# -----------------------------------------------------------------------------
 function pr::wait_for_ci_status() {
   for count in {1..20}; do
     hub ci-status | grep -q success && return 0
@@ -266,6 +329,19 @@ function pr::wait_for_ci_status() {
   return 1
 }
 
+function pr::push_release() {
+  git push origin release/${NEW_RELEASE}
+  git push origin ${NEW_RELEASE}
+}
+
+function pr::create_pull_request() {
+  pr::push_release
+  hub pull-request -m "$(::message)"
+}
+
+# -----------------------------------------------------------------------------
+# Release section
+# -----------------------------------------------------------------------------
 function release::to_github() {
   ${SCRIPT_DIR}/pa-github-release.sh \
     ${PRE_RELEASE:+--pre-release} \
@@ -273,31 +349,11 @@ function release::to_github() {
     --message "$(message)"
 }
 
-function run_stages() {
-  local -- stage=${1}; shift;
-  if [[ ! ${stage} =~ patch|build|pr|release ]]; then
-    echo "Stage ${stage} unknown to human kind!" 1>&2
-  fi
-  patch::create_branch
-  patch::create_release
-  [[ ${stage} == patch ]] && return 0
-  build::release
-  [[ ${stage} == build ]] && return 0
-  pr::create_pull_request
-  pr::wait_for_ci_status
-  [[ ${stage} == pr ]] && return 0
-  release::to_github
-}
-
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-# patch, build, pr, release
-
-parse_options "${@}"
-verify_options
-sync_default_branch
-define_release_variables
-run_stages ${STAGE}
+::parse_options "${@}"
+::verify_options
+::run_stages ${STAGE}
 
 # vim: set shiftwidth=2 softtabstop=2 expandtab :
