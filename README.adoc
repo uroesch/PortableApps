@@ -1,0 +1,193 @@
+= {Title}
+:title:     Personal PortableApps Meta Repository
+:author:    Urs Roesch
+:firstname: Urs
+:lastname:  Roesch
+:email:     github@bun.ch
+:keywords:  portableapps, windows, portable
+:base-url:  https://github.com/uroesch/PortableApps
+:!toc:
+ifdef::env-github[]
+:tip-caption:       :bulb:
+:note-caption:      :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption:   :fire:
+:warning-caption:   :warning:
+endif::[]
+
+image:{base-url}/workflows/build-all-packages/badge.svg[
+  title="build-all-packages",
+  link="{base-url}/actions?query=workflow:build-all-packages"
+]
+image:{base-url}/workflows/daily-submodule-sync/badge.svg[
+  title="daily-submodule-sync",
+  link="{base-url}/actions?query=workflow:daily-submodule-sync"
+]
+
+This is my personal meta repository holding all my PortableApps
+repositories and some useful scripts for helping with building and
+updating.
+
+== Build environment setup
+
+=== Linux
+
+==== Docker
+
+This is the prefered and easiest way to build on Linux.
+
+The dependencies such as `wine` and `powershell` are all contained
+in the docker container so other than the omnipresent `bash` shell
+and `git` and obviously a working installation of `docker` there
+are no other dependecies.
+
+===== Installation instructions
+
+. Install dependencies
++
+[source,console]
+----
+sudo apt install docker.io git
+----
+
+. Setup docker
++
+[source,console]
+----
+sudo useradd -a -G docker ${USER}
+----
+
+. Build PortableApps
++
+[source,console]
+----
+git clone --recursive https://github.com/uroesch/PortableApps.git
+cd PortableApps
+./scripts/docker-build.sh --all
+----
+
+==== Ubuntu 18.04
+At this point in time the only verified build environemnt on Linux is
+Ubuntu 18.04. There are a few dependencies to be installed to build
+the PortableApps included in this repository.
+
+Namely:
+
+- PowerShell
+- Wine
+- Git
+- 7zip
+- Xfvb [optional]
+- hub [optional]
+
+==== Installation instructions
+
+. Install powershell
++
+[source,console]
+----
+sudo snap install powershell --classic
+----
+
+. Install wine
++
+[source,console]
+----
+sudo dpkg --add-architecture i386 && \
+  sudo apt-get update && \
+  sudo apt-get -y install wine32
+----
+. Install git
++
+[source,console]
+----
+sudo apt-get -y install git git-lfs
+----
+
+. Install 7zip
++
+[source,console]
+----
+sudo apt-get -y install p7zip-full
+----
+
+. Install Virtual Frame Buffer
++
+[source,console]
+----
+sudo apt-get -y install xvfb
+----
+
+. Install the `hub` tool (github)
++
+[source,console]
+----
+sudo apt-get -y install hub
+----
+
+=== Windows
+
+==== Windows 10
+
+Windows 10 should work out of the box as far as the supporting scripts
+are concerned the only dependency required to be installed is a version
+of `Git` and `7zip`.
+
+<<<
+
+== Clone repositories
+
+=== Prerequisites
+
+Since there are few `submodules` linked in this repo the usual
+clone command does not apply.
+
+[source,console]
+----
+git clone --recursive https://github.com/uroesch/PortableApps.git
+----
+
+If you forgot the `--recursive` option you can populate the
+submodules with this command.
+
+[source,console]
+----
+git submodule update --recursive --init
+----
+
+== Build PortableApps
+
+=== Build single installer
+
+In this example the `PlinkProxyPortable` installer is built.
+
+[source,console]
+----
+cd PortableApps
+cd PlinkProxyPortable
+./Other/Update/Update.ps1
+----
+
+[NOTE] 
+--
+If above command does throw an error on Windows due to execution policy try
+
+`powershell -ExecutionPolicy ByPass -File .\Other\Update\Update.ps1`
+--
+
+=== Build all installers
+
+[source,console]
+----
+cd PortableApps
+./scripts/build-all.ps1
+----
+
+[NOTE] 
+--
+If above command does throw an error on Windows due to execution policy try 
+
+`powershell -ExecutionPolicy ByPass -File .\scripts\build-all.ps1`.
+--
+
+// vim: set colorcolumn=80 textwidth=80 spell spelllang=en_us :
