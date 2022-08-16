@@ -1,0 +1,43 @@
+== Installation
+
+=== Download
+
+Since this is not an official PortableApp the PortableApps installer must
+be download first. Navigate to https://github.com/uroesch/{app-name}/releases
+for a selection of releases.
+
+=== Install via the PortableApps.com Platform
+
+After downloading the `.paf.exe` installer navigate to your PortableApps.com 
+platform `Apps` Menu &#10102; and select `Install a new app (paf.exe)` &#10103;.
+
+
+image:install_newapp_menu.png[width="400"]
+
+From the dialog choose the previously downloaded `.paf.exe` file. &#10104;
+
+image:install_newapp_dialog.png[width="400"]
+
+After a short while the installation dialog will appear.
+
+image:Images/install_newapp_installation.png[width="400"]
+
+
+=== Install outside of the PortableApps.com Platform
+
+The Packages found under the release page are not digitally signed so there the
+installation is a bit involved.
+
+After downloading the `.paf.exe` installer trying to install may result in a
+windows defender warning.
+
+image:info_defender-protected.png[width="260"]
+
+To unblock the installer and install the application follow the annotated
+screenshot below.
+
+image:howto_unblock-file.png[width="600"]
+
+. Right click on the executable file.
+. Choose `Properties` at the bottom of the menu.
+. Check the unblock box.
