@@ -65,6 +65,16 @@ Function Logger() {
 }
 
 # -----------------------------------------------------------------------------
+Function Default-Branch() {
+  # prefer master over main
+  $Branches = Invoke-Expression 'git branch' | Foreach-Object { 
+    If ($_ -match '^\*?\s(master|main)$') { $_ -replace '^\*?\s+', '' } 
+  } | Sort-Object -Descending
+  # flatten array / string
+  Return @( $Branches | Foreach-Object { $_ } )[0]
+}
+
+# -----------------------------------------------------------------------------
 Function Run() {
   Param(
     [String] $Command
@@ -76,14 +86,15 @@ Function Run() {
 # -----------------------------------------------------------------------------
 Function Pull-Repository() {
   Param(
-    [String] $Ref = 'master'
+    [String] $Ref = $Null
   )
-  # There may be an easier wasy with submodule
+  If (!$Ref) { $Ref = Default-Branch }
+  # There may be an easier way with submodule
   # but I have not yet found it.
   Run "git checkout $Ref"
   Run "git pull --rebase origin $Ref"
   Run 'git branch' | ForEach-Object {
-    If ($_ -notmatch "$Ref|master") {
+    If ($_ -notmatch "$Ref|master|main") {
       Logger info "Deleting branch '$_'"
       Run "git branch -d $_"
       Run "git push origin :$_"
@@ -95,7 +106,7 @@ Function Pull-Repository() {
 Function Sync-Repository() {
   Param(
     [String] $Submodule,
-    [String] $Ref = 'master'
+    [String] $Ref = '__default-ref__'
   )
   Try {
     Push-Location $BaseDir
@@ -132,7 +143,7 @@ Function Update-Submodule() {
     Get-ChildItem $BaseDir -Directory | ForEach-Object -Process {
       If ($_.Name -match $Pattern) {
         $Ref = Switch ($GitRefs[$_.Name]) {
-          ''      { 'master' }
+          ''      { $Null }
           Default { $_ }
         }
         Sync-Repository -Submodule $_.Name -Ref $Ref
