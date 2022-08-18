@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.7.0
+declare -r VERSION=0.8.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -137,6 +137,17 @@ function ::message() {
   fi
 }
 
+function ::has_docker() {
+  command -v docker &> /dev/null
+}
+
+function ::build_method() {
+  case $(uname -o) in
+  Msys|Cygwin) : ;;
+  *) ::has_docker && BUILD_METHOD=docker || : ;;
+  esac
+}
+
 function ::build_with_powershell() {
   ${POWERSHELL} \
     -ExecutionPolicy ByPass \
@@ -241,7 +252,7 @@ function prep::sync_default_branch() {
 
 function prep::print_variables() {
   printf "\nVariables:\n"
-  for var in {NEW,OLD}_{RELEASE,VERSION,DISPLAY} PRE_RELEASE; do
+  for var in BUILD_METHOD {NEW,OLD}_{RELEASE,VERSION,DISPLAY} PRE_RELEASE; do
     printf " - %-12s '%s'\n" "${var}:" "${!var}"
   done
 }
@@ -354,6 +365,7 @@ function release::to_github() {
 # -----------------------------------------------------------------------------
 ::parse_options "${@}"
 ::verify_options
+::build_method
 ::run_stages ${STAGE}
 
 # vim: set shiftwidth=2 softtabstop=2 expandtab :
