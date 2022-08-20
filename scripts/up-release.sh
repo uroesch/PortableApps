@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.8.0
+declare -r VERSION=0.8.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -47,6 +47,7 @@ function ::run_stages() {
   prep::github_releases
   prep::sync_default_branch
   prep::define_release_variables
+  prep::compare_versions
   prep::print_variables
   [[ ${stage} == prep ]] && return 0
   patch::create_branch
@@ -248,6 +249,14 @@ function prep::sync_default_branch() {
   prep::find_default_branch
   git checkout "${DEFAULT_BRANCH}"
   git pull origin "${DEFAULT_BRANCH}"
+}
+
+function prep::compare_versions() {
+  if [[ ${OLD_VERSION} == ${NEW_VERSION} ]]; then
+    printf "\n\nThe current (%s) and new (%s) version are the same.\n\n" \
+      "${OLD_VERSION}" "${NEW_VERSION}"
+    exit 0
+  fi
 }
 
 function prep::print_variables() {
