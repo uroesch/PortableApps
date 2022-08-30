@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.8.1
+declare -r VERSION=0.9.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -197,6 +197,22 @@ function github::new_version() {
      -e 's/(\([0-9]*\))/.\1/g;'
 }
 
+function github::pattern() {
+  awk -F "[ =]*" '/GithubAsset/ {print $2}' ${UPDATE_INI}
+}
+
+function github::browser_download_url() {
+  local name=$(github::release_name) 
+  local pattern=$(github::pattern)
+  [[ -z ${pattern} ]] && return 0
+  github::releases |
+  jq -r ".[] | \
+    select( .name == \"${name}\" ) | \
+    .assets[] | \
+    select( .name | match(\"${pattern}\") ) | \
+    .browser_download_url"
+}
+
 function github::prerelease() {
   local query='.[] | select(.name == "%s") | .prerelease'
   github::releases | \
@@ -277,8 +293,17 @@ function patch::create_branch() {
   git checkout ${checkout_option} release/${NEW_RELEASE}
 }
 
+function patch::browser_download_url() {
+  [[ -z ${GITHUB_PATH} ]] && return 0 || :
+  local url=$(github::browser_download_url)
+  [[ -z ${url} ]] && return 0 || :
+  local pattern=$(github::pattern) 
+  sed -r -i -e "/^URL/s|= .*${pattern}.*|= ${url}|" ${UPDATE_INI}
+}
+
 function patch::create_release() {
   local old_version=$(::escape_regex "${OLD_VERSION}")
+  patch::browser_download_url
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
     -e '/^Upstream/!'"s/${old_version}\>/${NEW_VERSION}/g" \
