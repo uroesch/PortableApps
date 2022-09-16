@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.9.0
+declare -r VERSION=0.9.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -193,8 +193,9 @@ function github::release_name() {
 function github::new_version() {
    github::release_name | \
    sed \
-     -e 's/[^0-9+-.\(jp\)]//g' \
-     -e 's/(\([0-9]*\))/.\1/g;'
+     -e 's/[^0-9+-.\(jp\|rc\)]//g' \
+     -e 's/(\([0-9]*\))/.\1/g' \
+     -e 's/^[^0-9]//'
 }
 
 function github::pattern() {
@@ -252,7 +253,7 @@ function prep::define_release_variables() {
   [[ -n ${GITHUB_PATH} && -z ${PRE_RELEASE} ]] && \
     PRE_RELEASE=$(github::prerelease)
   prep::format_package_version
-  NEW_DISPLAY=${NEW_RELEASE/#v/}
+  NEW_DISPLAY=${NEW_RELEASE/#[a-z]/}
 }
 
 function prep::find_default_branch() {
@@ -276,8 +277,13 @@ function prep::compare_versions() {
 }
 
 function prep::print_variables() {
+  local -a fields=(
+    BUILD_METHOD 
+    {NEW,OLD}_{PACKAGE,RELEASE,VERSION,DISPLAY} 
+    PRE_RELEASE
+  )
   printf "\nVariables:\n"
-  for var in BUILD_METHOD {NEW,OLD}_{RELEASE,VERSION,DISPLAY} PRE_RELEASE; do
+  for var in ${fields[@]}; do
     printf " - %-12s '%s'\n" "${var}:" "${!var}"
   done
 }
