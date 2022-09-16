@@ -8,7 +8,7 @@ for a selection of releases.
 
 === Install via the PortableApps.com Platform
 
-After downloading the `.paf.exe` installer navigate to your PortableApps.com 
+After downloading the `.paf.exe` installer navigate to your PortableApps.com
 platform `Apps` Menu &#10102; and select `Install a new app (paf.exe)` &#10103;.
 
 
