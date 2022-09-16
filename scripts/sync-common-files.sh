@@ -11,7 +11,7 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r VERSION=0.5.0
+declare -r VERSION=0.6.0
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
@@ -25,6 +25,7 @@ declare -g MESSAGE="Sync common files - ${TIMESTAMP}"
 declare -g BUILD_METHOD=powershell
 declare -g NO_PR=false
 declare -g FORCE=
+declare -g DEFAULT_BRANCH=
 declare -g TEMPLATE=false
 declare -g START_X=false
 declare -g NO_BUILD=false
@@ -40,6 +41,14 @@ function start_x() {
   pkill -f "Xvfb ${DISPLAY}" || :
   sleep 1
   Xvfb ${DISPLAY} -ac &
+}
+
+# -----------------------------------------------------------------------------
+
+function find_default_branch() {
+  # prefer master over main
+  local -a branches=( $(git branch | grep -oE "\<(master|main)\>" | sort -r) )
+  DEFAULT_BRANCH="${branches[0]}"
 }
 
 # -----------------------------------------------------------------------------
@@ -68,9 +77,10 @@ function build_release() {
 function sync_repo() {
   local dir=${1}
   cd ${dir}
-  git checkout master
+  find_default_branch
+  git checkout ${DEFAULT_BRANCH}
   git fetch --all
-  git pull origin master
+  git pull origin ${DEFAULT_BRANCH}
   if git branch | grep -q "sync/update-${TIMESTAMP}"; then
     git checkout ${BRANCH}
   else
@@ -82,13 +92,13 @@ function sync_repo() {
   git add .
   git status
   if ! git commit -a -m "${MESSAGE}"; then
-    git checkout master
+    git checkout ${DEFAULT_BRANCH}
     git branch -D ${BRANCH}
   else
     [[ ${NO_BUILD} == false ]] && build_release
     git push ${FORCE:+--force} origin ${BRANCH}
     create_pull_request
-    git checkout master
+    git checkout ${DEFAULT_BRANCH}
   fi
 }
 
@@ -96,7 +106,7 @@ function sync_repo() {
 
 function create_pull_request() {
   [[ ${NO_PR} == true ]] && return 0
-  hub pull-request -p -m "${MESSAGE}"
+  hub pull-request -b ${DEFAULT_BRANCH} -p -m "${MESSAGE}"
 }
 
 # -----------------------------------------------------------------------------
@@ -105,7 +115,7 @@ function replace_placeholders() {
   local dir=${1}; shift;
   local app_name=${dir##*/}
   [[ ${app_name} =~ Template$ ]] && return 0
-  sed -i "s/{{ AppName }}/${app_name}/g" README.md
+  [[ -f README.md ]] && sed -i "s/{{ AppName }}/${app_name}/g" README.md || :
 }
 
 # -----------------------------------------------------------------------------
