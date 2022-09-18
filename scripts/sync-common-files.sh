@@ -11,7 +11,7 @@ set -o pipefail
 # Globals
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
-declare -r VERSION=0.6.0
+declare -r VERSION=0.6.1
 declare -r SCRIPT_DIR=$(readlink --canonicalize $(dirname ${0}))
 declare -r BASE_DIR=$(readlink --canonicalize $(dirname ${0})/..)
 declare -r COMMONFILES_DIR="${BASE_DIR}/CommonFiles"
@@ -121,17 +121,17 @@ function replace_placeholders() {
 # -----------------------------------------------------------------------------
 
 function replace_includes() {
-  for file in $(find ${INCLUDES_DIR} -name "*.md"); do
+  [[ -f README.adoc ]] || return 0 && :
+  for file in $(find ${INCLUDES_DIR} -name "*.adoc"); do
     local basename=${file##*/}
-    local start="<!-- Start include ${basename} -->"
-    local end="<!-- End include ${basename} -->"
+    local start="\\/\\/ Start include ${basename}"
+    local end="\\/\\/ End include ${basename}"
     sed -i -e "/${start}/,/${end}/{
       /${start}/!{
         /${end}/!d;
         e cat '${file}'
       }
-    }" README.md
-
+    }" README.adoc
   done
 }
 
