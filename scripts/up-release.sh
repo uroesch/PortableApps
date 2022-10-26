@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.9.1
+declare -r VERSION=0.9.3
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -186,12 +186,14 @@ function github::releases() {
 }
 
 function github::release_name() {
+   local filter=${1:-}
    github::releases | \
-   jq -r "[ .[].name ] | first"
+   jq -r "[ .[].name | select(. = contains(\"${filter}\")) ] | first"
 }
 
 function github::new_version() {
-   github::release_name | \
+   local filter=${1:-}
+   github::release_name "${filter}" | \
    sed \
      -e 's/[^0-9+-.\(jp\|rc\)]//g' \
      -e 's/(\([0-9]*\))/.\1/g' \
@@ -241,7 +243,7 @@ function prep::define_release_variables() {
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
   [[ -n ${GITHUB_PATH} ]] && \
-    NEW_VERSION=$(github::new_version)
+    NEW_VERSION=$(github::new_version "${NEW_VERSION:-}")
   [[ -z ${NEW_RELEASE} ]] && \
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   [[ ${NEW_RELEASE:0:1} != v ]] && \
@@ -387,7 +389,7 @@ function pr::push_release() {
 
 function pr::create_pull_request() {
   pr::push_release
-  hub pull-request -m "$(::message)"
+  hub pull-request -b "${DEFAULT_BRANCH}" -m "$(::message)"
 }
 
 # -----------------------------------------------------------------------------
