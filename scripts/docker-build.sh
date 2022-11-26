@@ -12,7 +12,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
-declare -r VERSION=0.3.0
+declare -r VERSION=0.3.1
 declare -r LICENSE="GPL2"
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r SCRIPT_DIR=$(readlink -f $(dirname $0))
@@ -41,6 +41,7 @@ function usage() {
     -h | --help             This message.
     -s | --shell            Mount everything and run a bash shell.
     -u | --up-release       Run in upgrade release mode.
+    -V | --version          Print version information and exit.
 
   Examples:
     Build all PortableApps packages in repository
