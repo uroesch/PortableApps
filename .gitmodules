@@ -13,11 +13,11 @@
 [submodule "ApacheDirectoryStudioPortable"]
 	path = ApacheDirectoryStudioPortable
 	url = http://github.com/uroesch/ApacheDirectoryStudioPortable.git
-	branch = master
+	branch = main
 [submodule "ApacheJMeterPortable"]
 	path = ApacheJMeterPortable
 	url = http://github.com/uroesch/ApacheJMeterPortable.git
-	branch = master
+	branch = main
 [submodule "MattermostPortable"]
 	path = MattermostPortable
 	url = http://github.com/uroesch/MattermostPortable.git
@@ -49,21 +49,28 @@
 [submodule "PlantUMLPortable"]
 	path = PlantUMLPortable
 	url = https://github.com/uroesch/PlantUMLPortable.git
+	branch = master
 [submodule "PlinkProxyPortable"]
 	path = PlinkProxyPortable
 	url = https://github.com/uroesch/PlinkProxyPortable.git
+	branch = master
 [submodule "DrawIOPortable"]
 	path = DrawIOPortable
 	url = https://github.com/uroesch/DrawIOPortable.git
+	branch = master
 [submodule "PortableAppsTemplate"]
 	path = PortableAppsTemplate
 	url = https://github.com/uroesch/PortableAppsTemplate.git
+	branch = master
 [submodule "CmderMiniPortable"]
 	path = CmderMiniPortable
 	url = https://github.com/uroesch/CmderMiniPortable.git
+	branch = main
 [submodule "CmderPortable"]
 	path = CmderPortable
 	url = https://github.com/uroesch/CmderPortable.git
+	branch = main
 [submodule "PuTTYPortable"]
 	path = PuTTYPortable
 	url = https://github.com/uroesch/PuTTYPortable.git
+	branch = master
