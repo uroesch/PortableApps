@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.9.3
+declare -r VERSION=0.10.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -311,14 +311,15 @@ function patch::browser_download_url() {
 
 function patch::create_release() {
   local old_version=$(::escape_regex "${OLD_VERSION}")
+  local exclude="^(Upstream|Package${GITHUB_PATH:+|URL})"
   patch::browser_download_url
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
-    -e '/^Upstream/!'"s/${old_version}\>/${NEW_VERSION}/g" \
-    -e '/^Upstream/!'"s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
-    -e '/^Upstream/!'"s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
-    -e '/^Upstream/!'"s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
-    -e '/^Checksum/!'"s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
+    -e "/${exclude}/!s/${old_version}\>/${NEW_VERSION}/g" \
+    -e "/${exclude}/!s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
+    -e "/${exclude}/!s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
+    -e "/${exclude}/!s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
+    -e "/${exclude}/!s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
     -e '/^Display/'"s/=.*/= ${NEW_DISPLAY}/g" \
     ${UPDATE_INI}
   patch::update_checksum
