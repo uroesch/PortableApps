@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.10.0
+declare -r VERSION=0.10.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -33,6 +33,7 @@ declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
 declare -g CHECKSUM=
+declare -g USE_GITHUB=
 declare -g STAGE=release
 declare -a GITHUB_RELEASES=()
 
@@ -128,6 +129,12 @@ function ::verify_options() {
       ::usage 1
     fi
   done
+  # don't use github url if new version was given as an option
+  if [[ -n ${NEW_VERSION} ]]; then
+    USE_GITHUB=false
+  elif [[ -n ${GITHUB_PATH} ]]; then
+    USE_GITHUB=true
+  fi
 }
 
 function ::message() {
@@ -179,7 +186,7 @@ function github::fetch_releases() {
 }
 
 function github::releases() {
-  [[ -z ${GITHUB_PATH} ]] && return 0
+  [[ ${USE_GITHUB} == false ]] && return 0
   (( ${#GITHUB_RELEASES[@]} == 0 )) && \
     readarray GITHUB_RELEASES <<< $(github::fetch_releases)
   echo "${GITHUB_RELEASES[@]}"
@@ -205,7 +212,7 @@ function github::pattern() {
 }
 
 function github::browser_download_url() {
-  local name=$(github::release_name) 
+  local name=$(github::release_name)
   local pattern=$(github::pattern)
   [[ -z ${pattern} ]] && return 0
   github::releases |
@@ -242,12 +249,11 @@ function prep::define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
   OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
   OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
-  [[ -n ${GITHUB_PATH} ]] && \
+  [[ ${USE_GITHUB} == true ]] &&
     NEW_VERSION=$(github::new_version "${NEW_VERSION:-}")
-  [[ -z ${NEW_RELEASE} ]] && \
+  [[ -n ${NEW_VERSION} ]] &&
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
-  [[ ${NEW_RELEASE:0:1} != v ]] && \
-    NEW_RELEASE=v${NEW_RELEASE}
+  [[ ${NEW_RELEASE:0:1} != v ]] && NEW_RELEASE=v${NEW_RELEASE}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
     echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
     exit 255
@@ -280,8 +286,8 @@ function prep::compare_versions() {
 
 function prep::print_variables() {
   local -a fields=(
-    BUILD_METHOD 
-    {NEW,OLD}_{PACKAGE,RELEASE,VERSION,DISPLAY} 
+    BUILD_METHOD
+    {NEW,OLD}_{PACKAGE,RELEASE,VERSION,DISPLAY}
     PRE_RELEASE
   )
   printf "\nVariables:\n"
@@ -302,16 +308,23 @@ function patch::create_branch() {
 }
 
 function patch::browser_download_url() {
-  [[ -z ${GITHUB_PATH} ]] && return 0 || :
+  [[ ${USE_GITHUB} == false ]] && return 0 || :
   local url=$(github::browser_download_url)
   [[ -z ${url} ]] && return 0 || :
-  local pattern=$(github::pattern) 
+  local pattern=$(github::pattern)
   sed -r -i -e "/^URL/s|= .*${pattern}.*|= ${url}|" ${UPDATE_INI}
+}
+
+function patch::exlude_url() {
+  case ${USE_GITHUB} in
+  false) : ;;
+  true) echo '|URL' ;;
+  esac
 }
 
 function patch::create_release() {
   local old_version=$(::escape_regex "${OLD_VERSION}")
-  local exclude="^(Upstream|Package${GITHUB_PATH:+|URL})"
+  local exclude="^(Upstream|Package$(patch::exclude_url))"
   patch::browser_download_url
   sed -r -i \
     -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
