@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.10.1
+declare -r VERSION=0.10.2
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -315,7 +315,7 @@ function patch::browser_download_url() {
   sed -r -i -e "/^URL/s|= .*${pattern}.*|= ${url}|" ${UPDATE_INI}
 }
 
-function patch::exlude_url() {
+function patch::exclude_url() {
   case ${USE_GITHUB} in
   false) : ;;
   true) echo '|URL' ;;
