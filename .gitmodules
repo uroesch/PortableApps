@@ -74,3 +74,9 @@
 	path = PuTTYPortable
 	url = https://github.com/uroesch/PuTTYPortable.git
 	branch = master
+[submodule "GitlabRunnerPortable"]
+	path = GitlabRunnerPortable
+	url = http://github.com/uroesch/GitlabRunnerPortable
+[submodule "GitlabCliPortable"]
+	path = GitlabCliPortable
+	url = https://github.com/uroesch/GitlabCliPortable.git

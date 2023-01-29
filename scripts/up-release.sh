@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.10.2
+declare -r VERSION=0.11.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -24,18 +24,19 @@ declare -g MESSAGE=
 declare -g ITERATION=
 declare -g BUILD_METHOD=powershell
 declare -g PRE_RELEASE=
-declare -g OLD_VERSION=$(awk -F "[ =]*" '/Upstream/ {print $2}' ${UPDATE_INI})
-declare -g GITHUB_PATH=$(awk -F "[ =]*" '/GithubPath/ {print $2}' ${UPDATE_INI})
+declare -g OLD_VERSION=
+declare -g GITHUB_PATH=
 declare -g NEW_VERSION=
 declare -g NEW_RELEASE=
 declare -g OLD_PACKAGE=
 declare -g NEW_PACKAGE=
 declare -g OLD_DISPLAY=
 declare -g NEW_DISPLAY=
-declare -g CHECKSUM=
 declare -g USE_GITHUB=
 declare -g STAGE=release
 declare -a GITHUB_RELEASES=()
+declare -A INI
+declare -a INI_ORDER
 
 # -----------------------------------------------------------------------------
 # Global functions
@@ -69,7 +70,6 @@ function ::usage() {
   Usage: ${SCRIPT} <options>
 
   Options:
-    -c | --checksum <sha256>   Provide the checksum for the download
     -d | --docker              Build with docker instead of powershell
     -g | --github-path <path>  Specify the github path of upstream project
                                Default: ${GITHUB_PATH}
@@ -95,7 +95,6 @@ function ::parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
     -V|--version)      ::version;;
-    -c|--checksum)     shift; CHECKSUM=${1};;
     -d|--docker)       BUILD_METHOD=docker;;
     -g|--github-path)  shift; GITHUB_PATH=${1};;
     -i|--iteration)    shift; ITERATION=${1};;
@@ -175,6 +174,68 @@ function ::escape_regex() {
   echo ${string}
 }
 
+
+# -----------------------------------------------------------------------------
+# INI Functions
+# -----------------------------------------------------------------------------
+function ini::read() {
+  while IFS='\n' read line; do
+    [[ ${line} =~ ^\s*$ ]] && continue || :
+    if [[ ${line} =~ ^\[.*\] ]]; then
+      INI_ORDER+=( "${line}" )
+      section="${line//[\[\]]/}"
+      continue
+    fi
+    IFS="[= ]" read key value <<< "${line}"
+    INI["${section}==${key}"]="${value}"
+    INI_ORDER+=( "${key}" )
+  done < ${UPDATE_INI}
+}
+
+function ini::update() {
+  local section=${1}; shift
+  local key=${1}; shift;
+  local value=${1}; shift;
+  INI["${section}==${key}"]="${value}"
+}
+
+function ini::fetch() {
+  local section=${1}; shift
+  local key=${1}; shift;
+  printf "${INI["${section}==${key}"]}"
+}
+
+function ini::sections() {
+  for section in ${INI_ORDER[@]}; do
+    [[ ${section} =~ ^\[.*\]$ ]] || continue && :
+    printf "%s\n" ${section//[\[\]]/}
+  done
+}
+
+function ini::keys() {
+  local section=${1}; shift
+  for key in ${INI_ORDER[@]}; do
+    [[ ${!INI[@]} =~ ${section}==${key} ]] || continue && :
+    echo ${key}
+  done
+}
+
+function ini::write() {
+  for section in $(ini::sections); do
+    printf "[%s]\n" "${section}"
+    for key in ${INI_ORDER[@]}; do
+      [[ ${!INI[@]} =~ ${section}==${key} ]] || continue && :
+      printf "%-12s = %s\n" "${key}" "${INI[${section}==${key}]}"
+    done
+    printf "\n"
+  done > ${UPDATE_INI}
+}
+
+function ini::to_globals() {
+  OLD_VERSION=$(ini::fetch Version Upstream)
+  GITHUB_PATH=$(ini::fetch Archive GithubPath1)
+}
+
 # -----------------------------------------------------------------------------
 # Github section
 # -----------------------------------------------------------------------------
@@ -207,13 +268,9 @@ function github::new_version() {
      -e 's/^[^0-9]//'
 }
 
-function github::pattern() {
-  awk -F "[ =]*" '/GithubAsset/ {print $2}' ${UPDATE_INI}
-}
-
 function github::browser_download_url() {
+  local pattern="${1}"; shift
   local name=$(github::release_name)
-  local pattern=$(github::pattern)
   [[ -z ${pattern} ]] && return 0
   github::releases |
   jq -r ".[] | \
@@ -247,8 +304,8 @@ function prep::format_package_version() {
 
 function prep::define_release_variables() {
   OLD_RELEASE=$(git describe --abbrev=0 --tags)
-  OLD_PACKAGE=$(awk -F "[= ]*" '/^Package/ { print $2 }' ${UPDATE_INI})
-  OLD_DISPLAY=$(awk -F "[= ]*" '/^Display/ { print $2 }' ${UPDATE_INI})
+  OLD_PACKAGE=$(ini::fetch Version Package)
+  OLD_DISPLAY=$(ini::fetch Version Display)
   [[ ${USE_GITHUB} == true ]] &&
     NEW_VERSION=$(github::new_version "${NEW_VERSION:-}")
   [[ -n ${NEW_VERSION} ]] &&
@@ -309,10 +366,31 @@ function patch::create_branch() {
 
 function patch::browser_download_url() {
   [[ ${USE_GITHUB} == false ]] && return 0 || :
-  local url=$(github::browser_download_url)
-  [[ -z ${url} ]] && return 0 || :
-  local pattern=$(github::pattern)
-  sed -r -i -e "/^URL/s|= .*${pattern}.*|= ${url}|" ${UPDATE_INI}
+  for key in $(ini::keys Archive); do
+    [[ ${key} =~ ^Github ]] || continue && :
+    number=${key//[^0-9]/}
+    pattern=$(ini::fetch Archive "GithubAsset${number}")
+    url=$(github::browser_download_url "${pattern}")
+    ini::update Archive "URL${number}" "${url}"
+  done
+}
+
+function patch::update_urls() {
+  [[ ${USE_GITHUB} == true ]] && return 0 || :
+  local old_version=$(::escape_regex "${OLD_VERSION}")
+  for key in $(ini::keys Archive); do
+    [[ ${key} =~ ^URL ]] || continue && :
+    url=$(
+      sed -r -i \
+        -e "s/${old_version}\>/${NEW_VERSION}/g" \
+        -e "s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
+        -e "s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
+        -e "s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
+        -e "s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
+        <<< "$(ini::fetch Archive ${key})"
+    )
+    ini::update Archive ${key} "${url}"
+  done
 }
 
 function patch::exclude_url() {
@@ -322,28 +400,18 @@ function patch::exclude_url() {
   esac
 }
 
-function patch::create_release() {
-  local old_version=$(::escape_regex "${OLD_VERSION}")
-  local exclude="^(Upstream|Package$(patch::exclude_url))"
-  patch::browser_download_url
-  sed -r -i \
-    -e "/^Package/s/${OLD_PACKAGE}/${NEW_PACKAGE}/" \
-    -e "/${exclude}/!s/${old_version}\>/${NEW_VERSION}/g" \
-    -e "/${exclude}/!s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
-    -e "/${exclude}/!s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
-    -e "/${exclude}/!s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
-    -e "/${exclude}/!s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
-    -e '/^Display/'"s/=.*/= ${NEW_DISPLAY}/g" \
-    ${UPDATE_INI}
-  patch::update_checksum
+function patch::version() {
+  ini::update Version Package "${NEW_PACKAGE}"
+  ini::update Version Display "${NEW_DISPLAY}"
 }
 
-function patch::update_checksum() {
-  [[ -z ${CHECKSUM} ]] && return 0
-  sed -r -i \
-    -e "/^Checksum1/s/(.*)::.*/\\1::${CHECKSUM}/" \
-    ${UPDATE_INI}
+function patch::create_release() {
+  patch::version
+  patch::browser_download_url
+  patch::update_urls
+  ini::write
 }
+
 
 # -----------------------------------------------------------------------------
 # Build section
@@ -356,10 +424,8 @@ function build::build_release() {
 }
 
 function build::update_upstream() {
-  local old_version=${1}
-  sed -r -i \
-    -e "/^Upstream/s/=.*/= ${NEW_VERSION}/g" \
-    ${UPDATE_INI}
+  ini::update Version Upstream "${NEW_VERSION}"
+  ini::write
 }
 
 function build::commit_release() {
@@ -378,8 +444,8 @@ function build::create_release_tag() {
 }
 
 function build::release() {
+  build::update_upstream
   build::build_release
-  build::update_upstream "$(::escape_regex "${OLD_VERSION}")"
   build::commit_release
   build::create_release_tag
 }
@@ -419,6 +485,8 @@ function release::to_github() {
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
+ini::read
+ini::to_globals
 ::parse_options "${@}"
 ::verify_options
 ::build_method
