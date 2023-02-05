@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.0
+declare -r VERSION=0.11.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -375,13 +375,13 @@ function patch::browser_download_url() {
   done
 }
 
-function patch::update_urls() {
-  [[ ${USE_GITHUB} == true ]] && return 0 || :
+function patch::fields() {
+  local field=${1}; shift;
   local old_version=$(::escape_regex "${OLD_VERSION}")
   for key in $(ini::keys Archive); do
-    [[ ${key} =~ ^URL ]] || continue && :
+    [[ ${key} =~ ^${field} ]] || continue && :
     url=$(
-      sed -r -i \
+      sed -r \
         -e "s/${old_version}\>/${NEW_VERSION}/g" \
         -e "s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
         -e "s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
@@ -391,6 +391,15 @@ function patch::update_urls() {
     )
     ini::update Archive ${key} "${url}"
   done
+}
+
+function patch::update_checksums() {
+  patch::fields Checksum
+}
+
+function patch::update_urls() {
+  [[ ${USE_GITHUB} == true ]] && return 0 || :
+  patch::fields URL
 }
 
 function patch::exclude_url() {
@@ -409,6 +418,7 @@ function patch::create_release() {
   patch::version
   patch::browser_download_url
   patch::update_urls
+  patch::update_checksums
   ini::write
 }
 
