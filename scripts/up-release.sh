@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.1
+declare -r VERSION=0.11.2
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -189,7 +189,7 @@ function ini::read() {
     IFS="[= ]" read key value <<< "${line}"
     INI["${section}==${key}"]="${value}"
     INI_ORDER+=( "${key}" )
-  done < ${UPDATE_INI}
+  done < <(sed '1s/^\xEF\xBB\xBF//' ${UPDATE_INI})
 }
 
 function ini::update() {
@@ -202,6 +202,7 @@ function ini::update() {
 function ini::fetch() {
   local section=${1}; shift
   local key=${1}; shift;
+  [[ ${!INI[@]} =~ ${section}==${key} ]] || return 0
   printf "${INI["${section}==${key}"]}"
 }
 
