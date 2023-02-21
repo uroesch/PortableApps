@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.2
+declare -r VERSION=0.11.3
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -490,7 +490,7 @@ function release::to_github() {
   ${SCRIPT_DIR}/pa-github-release.sh \
     ${PRE_RELEASE:+--pre-release} \
     --tag ${NEW_RELEASE} \
-    --message "$(message)"
+    --message "$(::message)"
 }
 
 # -----------------------------------------------------------------------------
