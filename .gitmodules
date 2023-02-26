@@ -1,15 +1,3 @@
-[submodule "ShareXPortable"]
-	path = ShareXPortable
-	url = http://github.com/uroesch/ShareXPortable.git
-	branch = master
-[submodule "LdapAdminPortable"]
-	path = LdapAdminPortable
-	url = http://github.com/uroesch/LdapAdminPortable.git
-	branch = master
-[submodule "DBeaverPortable"]
-	path = DBeaverPortable
-	url = http://github.com/uroesch/DBeaverPortable.git
-	branch = master
 [submodule "ApacheDirectoryStudioPortable"]
 	path = ApacheDirectoryStudioPortable
 	url = http://github.com/uroesch/ApacheDirectoryStudioPortable.git
@@ -18,50 +6,6 @@
 	path = ApacheJMeterPortable
 	url = http://github.com/uroesch/ApacheJMeterPortable.git
 	branch = main
-[submodule "MattermostPortable"]
-	path = MattermostPortable
-	url = http://github.com/uroesch/MattermostPortable.git
-	branch = master
-[submodule "JoplinPortable"]
-	path = JoplinPortable
-	url = http://github.com/uroesch/JoplinPortable.git
-	branch = master
-[submodule "WinMergeJPPortable"]
-	path = WinMergeJPPortable
-	url = http://github.com/uroesch/WinMergeJPPortable.git
-	branch = master
-[submodule "KeyStoreExplorerPortable"]
-	path = KeyStoreExplorerPortable
-	url = https://github.com/uroesch/KeyStoreExplorerPortable.git
-	branch = master
-[submodule "GitPortable"]
-	path = GitPortable
-	url = https://github.com/uroesch/GitPortable.git
-	branch = master
-[submodule "PortableApps.comLauncher"]
-	path = PortableApps.comLauncher
-	url = https://github.com/uroesch/PortableApps.comLauncher.git
-	branch = patched
-[submodule "PortableApps.comInstaller"]
-	path = PortableApps.comInstaller
-	url = https://github.com/uroesch/PortableApps.comInstaller.git
-	branch = master
-[submodule "PlantUMLPortable"]
-	path = PlantUMLPortable
-	url = https://github.com/uroesch/PlantUMLPortable.git
-	branch = master
-[submodule "PlinkProxyPortable"]
-	path = PlinkProxyPortable
-	url = https://github.com/uroesch/PlinkProxyPortable.git
-	branch = master
-[submodule "DrawIOPortable"]
-	path = DrawIOPortable
-	url = https://github.com/uroesch/DrawIOPortable.git
-	branch = master
-[submodule "PortableAppsTemplate"]
-	path = PortableAppsTemplate
-	url = https://github.com/uroesch/PortableAppsTemplate.git
-	branch = master
 [submodule "CmderMiniPortable"]
 	path = CmderMiniPortable
 	url = https://github.com/uroesch/CmderMiniPortable.git
@@ -70,13 +14,71 @@
 	path = CmderPortable
 	url = https://github.com/uroesch/CmderPortable.git
 	branch = main
+[submodule "DBeaverPortable"]
+	path = DBeaverPortable
+	url = http://github.com/uroesch/DBeaverPortable.git
+	branch = main
+[submodule "DrawIOPortable"]
+	path = DrawIOPortable
+	url = https://github.com/uroesch/DrawIOPortable.git
+	branch = main
+[submodule "GitPortable"]
+	path = GitPortable
+	url = https://github.com/uroesch/GitPortable.git
+	branch = main
+[submodule "GitlabCliPortable"]
+	path = GitlabCliPortable
+	url = https://github.com/uroesch/GitlabCliPortable.git
+	branch = main
+[submodule "GitlabRunnerPortable"]
+	path = GitlabRunnerPortable
+	url = http://github.com/uroesch/GitlabRunnerPortable
+	branch = main
+[submodule "JoplinPortable"]
+	path = JoplinPortable
+	url = http://github.com/uroesch/JoplinPortable.git
+	branch = main
+[submodule "KeyStoreExplorerPortable"]
+	path = KeyStoreExplorerPortable
+	url = https://github.com/uroesch/KeyStoreExplorerPortable.git
+	branch = main`
+[submodule "LdapAdminPortable"]
+	path = LdapAdminPortable
+	url = http://github.com/uroesch/LdapAdminPortable.git
+	branch = master
+[submodule "MattermostPortable"]
+	path = MattermostPortable
+	url = http://github.com/uroesch/MattermostPortable.git
+	branch = master
+[submodule "PlantUMLPortable"]
+	path = PlantUMLPortable
+	url = https://github.com/uroesch/PlantUMLPortable.git
+	branch = master
+[submodule "PlinkProxyPortable"]
+	path = PlinkProxyPortable
+	url = https://github.com/uroesch/PlinkProxyPortable.git
+	branch = main
+[submodule "PortableApps.comInstaller"]
+	path = PortableApps.comInstaller
+	url = https://github.com/uroesch/PortableApps.comInstaller.git
+	branch = main
+[submodule "PortableApps.comLauncher"]
+	path = PortableApps.comLauncher
+	url = https://github.com/uroesch/PortableApps.comLauncher.git
+	branch = patched
+[submodule "PortableAppsTemplate"]
+	path = PortableAppsTemplate
+	url = https://github.com/uroesch/PortableAppsTemplate.git
+	branch = main
 [submodule "PuTTYPortable"]
 	path = PuTTYPortable
 	url = https://github.com/uroesch/PuTTYPortable.git
 	branch = master
-[submodule "GitlabRunnerPortable"]
-	path = GitlabRunnerPortable
-	url = http://github.com/uroesch/GitlabRunnerPortable
-[submodule "GitlabCliPortable"]
-	path = GitlabCliPortable
-	url = https://github.com/uroesch/GitlabCliPortable.git
+[submodule "ShareXPortable"]
+	path = ShareXPortable
+	url = http://github.com/uroesch/ShareXPortable.git
+	branch = master
+[submodule "WinMergeJPPortable"]
+	path = WinMergeJPPortable
+	url = http://github.com/uroesch/WinMergeJPPortable.git
+	branch = master
