@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.3
+declare -r VERSION=0.11.4
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -309,7 +309,7 @@ function prep::define_release_variables() {
   OLD_DISPLAY=$(ini::fetch Version Display)
   [[ ${USE_GITHUB} == true ]] &&
     NEW_VERSION=$(github::new_version "${NEW_VERSION:-}")
-  [[ -n ${NEW_VERSION} ]] &&
+  [[ -n ${NEW_VERSION} && -z ${NEW_RELEASE} ]] &&
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   [[ ${NEW_RELEASE:0:1} != v ]] && NEW_RELEASE=v${NEW_RELEASE}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
