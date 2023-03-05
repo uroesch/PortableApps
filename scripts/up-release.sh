@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.4
+declare -r VERSION=0.11.5
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -265,6 +265,7 @@ function github::new_version() {
    github::release_name "${filter}" | \
    sed \
      -e 's/[^0-9+-.\(jp\|rc\)]//g' \
+     -e 's/\.\.[0-9]//g' \
      -e 's/(\([0-9]*\))/.\1/g' \
      -e 's/^[^0-9]//'
 }
@@ -300,7 +301,7 @@ function prep::format_package_version() {
   local    package_version=${NEW_VERSION//[^0-9.-]/}
   local -a package_tokens=( ${package_version//[-.]/ } )
   [[ -n ${ITERATION} ]] && package_tokens[3]=${ITERATION}
-  NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${package_tokens[@]})
+  NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${package_tokens[@]:0:4})
 }
 
 function prep::define_release_variables() {
