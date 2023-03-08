@@ -12,13 +12,15 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
-declare -r VERSION=0.3.1
+declare -r VERSION=0.3.2
 declare -r LICENSE="GPL2"
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r SCRIPT_DIR=$(readlink -f $(dirname $0))
 declare -r UPDATE_SCRIPT=Other/Update/Update.ps1
 declare -a UPDATE_OPTIONS=( -InfraDir /pa-build )
 declare -r DIVIDER=$(printf "%0.1s" -{1..80})
+declare -g INTERACTIVE=
+declare -g TTY=
 declare -g DOCKER_IMAGE=uroesch/pa-wine:latest
 declare -g RUN_SHELL=false
 declare -g BUILD_ALL=false
@@ -80,6 +82,14 @@ function parse_options() {
 
 # -----------------------------------------------------------------------------
 
+function has_tty() {
+  [[ ! -t 1 ]] && return 0
+  TTY=true
+  INTERACTIVE=true
+}
+
+# -----------------------------------------------------------------------------
+
 function version() {
   printf "%s v%s\nCopyright (c) %s\nLicense - %s\n" \
     "${SCRIPT%.*}" "${VERSION}" "${AUTHOR}" "${LICENSE}"
@@ -127,8 +137,8 @@ function run_docker() {
   local command="${@}";
   docker run \
     --rm \
-    --tty \
-    --interactive \
+    ${TTY:+--tty} \
+    ${INTERACTIVE:+--interactive} \
     --env USER_UID=$(id --user) \
     --env USER_GID=$(id --group) \
     --mount type=bind,src=${BASE_DIR},target=/PortableApps \
@@ -160,5 +170,6 @@ function build_on_docker() {
 # Main
 # -----------------------------------------------------------------------------
 parse_options "${@}"
+has_tty
 run_shell
 build_packages
