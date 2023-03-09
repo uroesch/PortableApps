@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Sync CommonFiles daily
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.1.0
+# Version: 0.2.0
 # -----------------------------------------------------------------------------
 name: daily-commonfiles-sync
 
@@ -56,12 +56,12 @@ jobs:
       run: sudo apt-get -y install xvfb
 
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: master
         submodules: recursive

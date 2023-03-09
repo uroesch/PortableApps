@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Build all portable apps for confirmation
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.2.0
+# Version: 0.3.0
 # -----------------------------------------------------------------------------
 name: build-all-packages
 
@@ -27,7 +27,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 

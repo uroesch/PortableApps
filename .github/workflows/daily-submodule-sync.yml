@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Sync submodules daily
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.2.0
+# Version: 0.3.0
 # -----------------------------------------------------------------------------
 name: daily-submodule-sync
 
@@ -25,7 +25,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: master
         submodules: recursive
