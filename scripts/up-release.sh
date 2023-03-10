@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.5
+declare -r VERSION=0.11.6
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -399,7 +399,8 @@ function patch::update_checksums() {
   patch::fields Checksum
 }
 
-function patch::update_urls() {
+function patch::update_fields() {
+  patch::fields ExtractName
   [[ ${USE_GITHUB} == true ]] && return 0 || :
   patch::fields URL
 }
@@ -419,7 +420,7 @@ function patch::version() {
 function patch::create_release() {
   patch::version
   patch::browser_download_url
-  patch::update_urls
+  patch::update_fields
   patch::update_checksums
   ini::write
 }
