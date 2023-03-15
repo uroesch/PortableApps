@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.6
+declare -r VERSION=0.11.7
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -298,7 +298,7 @@ function prep::github_releases() {
 }
 
 function prep::format_package_version() {
-  local    package_version=${NEW_VERSION//[^0-9.-]/}
+  local -- package_version=${NEW_VERSION//[^0-9.-]/}
   local -a package_tokens=( ${package_version//[-.]/ } )
   [[ -n ${ITERATION} ]] && package_tokens[3]=${ITERATION}
   NEW_PACKAGE=$(printf "%d.%d.%d.%d" ${package_tokens[@]:0:4})
@@ -314,7 +314,8 @@ function prep::define_release_variables() {
     NEW_RELEASE=${OLD_RELEASE/${OLD_VERSION}/${NEW_VERSION}}
   [[ ${NEW_RELEASE:0:1} != v ]] && NEW_RELEASE=v${NEW_RELEASE}
   if [[ ! ${OLD_RELEASE} =~ ${OLD_VERSION//+/\\+} ]]; then
-    echo "'${OLD_RELEASE}' from git tags does not match with provided '${OLD_VERSION}'"
+    printf "'%s' from git tags does not match with provided '%s'" \
+      "${OLD_RELEASE}" "${OLD_VERSION}"
     exit 255
   fi
   [[ -n ${GITHUB_PATH} && -z ${PRE_RELEASE} ]] && \
@@ -336,9 +337,9 @@ function prep::sync_default_branch() {
 }
 
 function prep::compare_versions() {
-  if [[ ${OLD_VERSION} == ${NEW_VERSION} ]]; then
+  if [[ ${OLD_PACKAGE} == ${NEW_PACKAGE} ]]; then
     printf "\n\nThe current (%s) and new (%s) version are the same.\n\n" \
-      "${OLD_VERSION}" "${NEW_VERSION}"
+      "${OLD_PACKAGE}" "${NEW_PACKAGE}"
     exit 0
   fi
 }
