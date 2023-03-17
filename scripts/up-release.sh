@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.7
+declare -r VERSION=0.11.8
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -385,11 +385,11 @@ function patch::fields() {
     [[ ${key} =~ ^${field} ]] || continue && :
     url=$(
       sed -r \
-        -e "s/${old_version}\>/${NEW_VERSION}/g" \
-        -e "s/${old_version%%-*}\>/${NEW_VERSION%%-*}/g" \
-        -e "s/${old_version//+/}\>/${NEW_VERSION//+}/g" \
-        -e "s/${old_version//+-/+}\>/${NEW_VERSION//+-/+}/g" \
-        -e "s/\<${OLD_VERSION//\./}\>/${NEW_VERSION//\./}/g" \
+        -e "s/${old_version}(\>|_)/${NEW_VERSION}\1/g" \
+        -e "s/${old_version%%-*}(\>|_)/${NEW_VERSION%%-*}\1/g" \
+        -e "s/${old_version//+/}(\>|_)/${NEW_VERSION//+}\1/g" \
+        -e "s/${old_version//+-/+}(\>|_)/${NEW_VERSION//+-/+}\1/g" \
+        -e "s/\<${OLD_VERSION//\./}(\>|_)/${NEW_VERSION//\./}\1/g" \
         <<< "$(ini::fetch Archive ${key})"
     )
     ini::update Archive ${key} "${url}"
