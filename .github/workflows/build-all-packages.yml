@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Build all portable apps for confirmation
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.3.0
+# Version: 0.4.0
 # -----------------------------------------------------------------------------
 name: build-all-packages
 
@@ -14,16 +14,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-all-packages:
+  pa-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      portable-apps: ${{ steps.pa-list.outputs.portable-apps }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: PortableApps list
+        id: pa-list
+        shell: bash
+        run: |
+          declare -a list
+          list=( $(find . -maxdepth 1 -type d -name "*Portable" -printf "%f\n") )
+          printf -v array '"%s",'  "${list[@]}"
+          printf "portable-apps={\"portable-app\":[${array%%,}]}" >> ${GITHUB_OUTPUT}
+
+
+  build:
+    needs:
+      - pa-matrix
     timeout-minutes: 90
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: uroesch/pa-wine:latest
+      env:
+        RUN_AS_ROOT: yes
     strategy:
+      max-parallel: 10
       fail-fast: true
-      matrix:
-        os:
-        - ubuntu-latest
-    env:
-      DISPLAY: ':7777'
+      matrix: ${{ fromJSON(needs.pa-matrix.outputs.portable-apps) }}
 
     steps:
     - name: Checkout repository
@@ -31,7 +54,11 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Run build script
+    - name: Run build script via docker
       shell: bash
-      run: bash scripts/build-all.sh --docker
-      timeout-minutes: 90
+      run: |
+        cd ${{ matrix.portable-app }} && \
+        /entrypoint.sh \
+          /usr/bin/pwsh -ExecutionPolicy ByPass \
+          Other/Update/Update.ps1 -InfraDir /pa-build
+      timeout-minutes: 10
