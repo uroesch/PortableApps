@@ -45,15 +45,15 @@
 [submodule "LdapAdminPortable"]
 	path = LdapAdminPortable
 	url = http://github.com/uroesch/LdapAdminPortable.git
-	branch = master
+	branch = main
 [submodule "MattermostPortable"]
 	path = MattermostPortable
 	url = http://github.com/uroesch/MattermostPortable.git
-	branch = master
+	branch = main
 [submodule "PlantUMLPortable"]
 	path = PlantUMLPortable
 	url = https://github.com/uroesch/PlantUMLPortable.git
-	branch = master
+	branch = main
 [submodule "PlinkProxyPortable"]
 	path = PlinkProxyPortable
 	url = https://github.com/uroesch/PlinkProxyPortable.git
@@ -73,12 +73,12 @@
 [submodule "PuTTYPortable"]
 	path = PuTTYPortable
 	url = https://github.com/uroesch/PuTTYPortable.git
-	branch = master
+	branch = main
 [submodule "ShareXPortable"]
 	path = ShareXPortable
 	url = http://github.com/uroesch/ShareXPortable.git
-	branch = master
+	branch = main
 [submodule "WinMergeJPPortable"]
 	path = WinMergeJPPortable
 	url = http://github.com/uroesch/WinMergeJPPortable.git
-	branch = master
+	branch = main
