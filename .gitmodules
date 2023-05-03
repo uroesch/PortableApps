@@ -74,10 +74,6 @@
 	path = PuTTYPortable
 	url = https://github.com/uroesch/PuTTYPortable.git
 	branch = main
-[submodule "ShareXPortable"]
-	path = ShareXPortable
-	url = http://github.com/uroesch/ShareXPortable.git
-	branch = main
 [submodule "WinMergeJPPortable"]
 	path = WinMergeJPPortable
 	url = http://github.com/uroesch/WinMergeJPPortable.git
