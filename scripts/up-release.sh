@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.8
+declare -r VERSION=0.11.9
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -334,6 +334,7 @@ function prep::sync_default_branch() {
   prep::find_default_branch
   git checkout "${DEFAULT_BRANCH}"
   git pull origin "${DEFAULT_BRANCH}"
+  git pull --tags
 }
 
 function prep::compare_versions() {
