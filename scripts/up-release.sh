@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.11.9
+declare -r VERSION=0.12.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -26,6 +26,8 @@ declare -g BUILD_METHOD=powershell
 declare -g PRE_RELEASE=
 declare -g OLD_VERSION=
 declare -g GITHUB_PATH=
+declare -g GITHUB_FILTER=
+declare -g LIST_RELEASES=false
 declare -g NEW_VERSION=
 declare -g NEW_RELEASE=
 declare -g OLD_PACKAGE=
@@ -46,6 +48,7 @@ function ::run_stages() {
   if [[ ! ${stage} =~ prep|patch|build|pr|release ]]; then
     echo "Stage ${stage} unknown to human kind!" 1>&2
   fi
+  github::list
   prep::github_releases
   prep::sync_default_branch
   prep::define_release_variables
@@ -67,25 +70,26 @@ function ::usage() {
   local exit_code=${1:-1}; shift
   cat <<USAGE
 
-  Usage: ${SCRIPT} <options>
+  Usage:
+    ${SCRIPT} <options>
 
   Options:
-    -d | --docker              Build with docker instead of powershell
-    -g | --github-path <path>  Specify the github path of upstream project
-                               Default: ${GITHUB_PATH}
-    -h | --help                This message
-    -i | --iteration <N>       Override the iteration
-    -m | --message <messag>    New version string (optional)
-    -n | --new <version>       New version string (mandatory)
-    -o | --old <version>       Old version string (optional)
-                               Default: ${OLD_VERSION}
-    -p | --pre-release         Submit as pre-release to github
-    -r | --release-name <name> New PA release name
-    -s | --stage <stage>       Only complete up to a certain stage.
-                               Values are prep, patch, build, pr, release
-                               Default: ${STAGE}
-    -V | --version             Print version, author and license and exit
-
+    -d | --docker                Build with docker instead of powershell
+    -g | --gh-path <path>        Specify the github path of upstream project
+                                 Default: ${GITHUB_PATH}
+    -f | --gh-filter <filter>    Override the github filter to search for release.
+    -h | --help                  This message
+    -i | --iteration <N>         Override the iteration
+    -m | --message <messag>      New version string (optional)
+    -n | --new <version>         New version string (mandatory)
+    -o | --old <version>         Old version string (optional)
+                                 Default: ${OLD_VERSION}
+    -p | --pre-release           Submit as pre-release to github
+    -r | --release-name <name>   New PA release name
+    -s | --stage <stage>         Only complete up to a certain stage.
+                                 Values are prep, patch, build, pr, release
+                                 Default: ${STAGE}
+    -V | --version               Print version, author and license and exit
 
 USAGE
   exit ${exit_code}
@@ -94,17 +98,19 @@ USAGE
 function ::parse_options() {
   while [[ $# -gt 0 ]]; do
     case ${1} in
-    -V|--version)      ::version;;
     -d|--docker)       BUILD_METHOD=docker;;
-    -g|--github-path)  shift; GITHUB_PATH=${1};;
-    -i|--iteration)    shift; ITERATION=${1};;
-    -m|--message)      shift; MESSAGE=${1};;
-    -n|--new)          shift; NEW_VERSION=${1};;
-    -o|--old)          shift; OLD_VERSION=${1};;
-    -p|--pre-release)  PRE_RELEASE=true;;
-    -r|--release-name) shift; NEW_RELEASE=${1};;
-    -s|--stage)        shift; STAGE=${1};;
+    -f|--gh-filter)    shift; GITHUB_FILTER="${1}";;
+    -g|--gh-path)      shift; GITHUB_PATH="${1}";;
     -h|--help)         ::usage 0;;
+    -i|--iteration)    shift; ITERATION="${1}";;
+    -l|--list)         LIST_RELEASES=true;;
+    -m|--message)      shift; MESSAGE="${1}";;
+    -n|--new)          shift; NEW_VERSION="${1}";;
+    -o|--old)          shift; OLD_VERSION="${1}";;
+    -p|--pre-release)  PRE_RELEASE=true;;
+    -r|--release-name) shift; NEW_RELEASE="${1}";;
+    -s|--stage)        shift; STAGE="${1}";;
+    -V|--version)      ::version;;
     *)                 ::usage 1;;
     esac
     shift
@@ -254,14 +260,20 @@ function github::releases() {
   echo "${GITHUB_RELEASES[@]}"
 }
 
+function github::list() {
+  [[ ${LIST_RELEASES} == false ]] && return 0 || :
+  github::releases | jq -r ".[].name"
+  exit 0
+}
+
 function github::release_name() {
-   local filter=${1:-}
+   local filter=${1:-${GITHUB_FILTER}}
    github::releases | \
-   jq -r "[ .[].name | select(. = contains(\"${filter}\")) ] | first"
+     jq -r "[ .[].name | select(. = contains(\"${filter}\")) ] | first"
 }
 
 function github::new_version() {
-   local filter=${1:-}
+   local filter=${1:-${GITHUB_FILTER}}
    github::release_name "${filter}" | \
    sed \
      -e 's/[^0-9+-.\(jp\|rc\)]//g' \
@@ -288,6 +300,7 @@ function github::prerelease() {
     jq -r "$(printf "${query}" "$(github::release_name)")" | \
     grep -i true || :
 }
+
 
 # -----------------------------------------------------------------------------
 # Preparation section
