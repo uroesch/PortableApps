@@ -34,12 +34,12 @@ updating.
 
 ==== Docker
 
-This is the prefered and easiest way to build on Linux.
+This is the preferred and easiest way to build on Linux.
 
 The dependencies such as `wine` and `powershell` are all contained
 in the docker container so other than the omnipresent `bash` shell
 and `git` and obviously a working installation of `docker` there
-are no other dependecies.
+are no other dependencies.
 
 ===== Installation instructions
 
@@ -67,7 +67,7 @@ cd PortableApps
 ----
 
 ==== Ubuntu 18.04
-At this point in time the only verified build environemnt on Linux is
+At this point in time the only verified build environment on Linux is
 Ubuntu 18.04. There are a few dependencies to be installed to build
 the PortableApps included in this repository.
 
