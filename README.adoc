@@ -66,7 +66,7 @@ cd PortableApps
 ./scripts/docker-build.sh --all
 ----
 
-==== Ubuntu 18.04
+==== Ubuntu 18.04 and 20.04
 At this point in time the only verified build environment on Linux is
 Ubuntu 18.04. There are a few dependencies to be installed to build
 the PortableApps included in this repository.
@@ -111,7 +111,7 @@ sudo apt-get -y install git git-lfs
 sudo apt-get -y install p7zip-full
 ----
 
-. Install Virtual Frame Buffer
+. Install the X Virtual Frame Buffer
 +
 [source,console]
 ----
@@ -168,7 +168,7 @@ cd PlinkProxyPortable
 ./Other/Update/Update.ps1
 ----
 
-[NOTE] 
+[NOTE]
 --
 If above command does throw an error on Windows due to execution policy try
 
@@ -183,9 +183,9 @@ cd PortableApps
 ./scripts/build-all.ps1
 ----
 
-[NOTE] 
+[NOTE]
 --
-If above command does throw an error on Windows due to execution policy try 
+If above command does throw an error on Windows due to execution policy try
 
 `powershell -ExecutionPolicy ByPass -File .\scripts\build-all.ps1`.
 --
