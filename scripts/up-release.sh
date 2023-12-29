@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.12.0
+declare -r VERSION=0.12.1
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -125,7 +125,7 @@ function ::version() {
 
 function ::verify_options() {
   if [[ -z ${GITHUB_PATH} && -z ${NEW_VERSION} ]]; then
-    printf "\nMissing value vor GithupPath or --new option\n"
+    printf "\nMissing value vor GithubPath or --new option\n"
     ::usage 123
   fi
   for option in OLD_VERSION; do
