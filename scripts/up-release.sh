@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.12.2
+declare -r VERSION=0.13.0
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -393,20 +393,22 @@ function patch::browser_download_url() {
 }
 
 function patch::fields() {
-  local field=${1}; shift;
-  local old_version=$(::escape_regex "${OLD_VERSION}")
+  local -r field=${1}; shift;
+  local -r old=$(::escape_regex "${OLD_VERSION}")
+  local -r new=${NEW_VERSION}
   for key in $(ini::keys Archive); do
     [[ ${key} =~ ^${field} ]] || continue && :
-    url=$(
+    value=$(
       sed -r \
-        -e "s/${old_version}(\>|_)/${NEW_VERSION}\1/g" \
-        -e "s/${old_version%%-*}(\>|_)/${NEW_VERSION%%-*}\1/g" \
-        -e "s/${old_version//+/}(\>|_)/${NEW_VERSION//+}\1/g" \
-        -e "s/${old_version//+-/+}(\>|_)/${NEW_VERSION//+-/+}\1/g" \
-        -e "s/\<${OLD_VERSION//\./}(\>|_)/${NEW_VERSION//\./}\1/g" \
+        -e "s/${old}(\b|_|$)/${new}\1/g" \
+        -e "/${new%%-*}/!s/${old%%-*}(\b|_|$)/${new%%-*}\1/g" \
+        -e "/${new//+}/!s/${old//+/}(\b|_|$)/${new//+}\1/g" \
+        -e "/${new//+-/+}/!s/${old//+-/+}(\b|_|$)/${new//+-/+}\1/g" \
+        -e "/${new//+-/%2B}/!s/${old//+-/%2B}(\b|_|$)/${new//+-/%2B}\1/g" \
+        -e "/${new//\./}/!s/\<${OLD_VERSION//\./}(\b|_|$)/${new//\./}\1/g" \
         <<< "$(ini::fetch Archive ${key})"
     )
-    ini::update Archive ${key} "${url}"
+    ini::update Archive ${key} "${value}"
   done
 }
 
