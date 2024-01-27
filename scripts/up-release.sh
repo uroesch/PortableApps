@@ -10,7 +10,7 @@ set -o pipefail
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.12.1
+declare -r VERSION=0.12.2
 declare -r SCRIPT=${0##*/}
 declare -r AUTHOR="Urs Roesch"
 declare -r LICENSE="GPL2"
@@ -209,7 +209,7 @@ function ini::fetch() {
   local section=${1}; shift
   local key=${1}; shift;
   [[ ${!INI[@]} =~ ${section}==${key} ]] || return 0
-  printf "${INI["${section}==${key}"]}"
+  printf "%s" "${INI["${section}==${key}"]}"
 }
 
 function ini::sections() {
