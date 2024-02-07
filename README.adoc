@@ -66,11 +66,11 @@ cd PortableApps
 ./scripts/docker-build.sh --all
 ----
 
-==== Ubuntu 18.04, 20.04 and 22.04
+==== Ubuntu 20.04 and 22.04
 
 At this point in time the only verified build environment on Linux is Ubuntu
-18.04, 20.04 and 22.04. There are a few dependencies to be installed to build
-the PortableApps included in this repository.
+20.04 and 22.04. There are a few dependencies to be installed to build the
+PortableApps included in this repository.
 
 Namely:
 
